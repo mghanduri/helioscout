@@ -9,13 +9,31 @@ HelioScout.Proposals = (function () {
   let sites = [];
   let plants = [];
 
-  /* ───────── type icons & colours ───────── */
+  /* ───────── type icons & colours (ISO/IEC-aligned SVG symbols) ───────── */
+  /*
+   * Solar PV  — IEC 60617-11 / IEC 61215 (crystalline silicon PV modules)
+   * Wind      — IEC 60617-11 / IEC 61400 (wind energy generation systems)
+   * CSP       — IEC 62862 (concentrated solar power systems)
+   * Hybrid    — Combined Solar PV + Wind (composite symbol)
+   */
+
+  var ICONS = {
+    solar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>',
+    wind:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><line x1="12" y1="10.5" x2="12" y2="4"/><line x1="10.7" y1="12.75" x2="5" y2="16"/><line x1="13.3" y1="12.75" x2="19" y2="16"/><line x1="12" y1="13.5" x2="12" y2="22"/><line x1="10" y1="22" x2="14" y2="22"/></svg>',
+    csp:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg"><path d="M4 18Q8 6 12 8Q16 6 20 18"/><line x1="12" y1="8" x2="12" y2="18"/><circle cx="12" cy="7" r="1.5" fill="currentColor" stroke="none"/></svg>',
+    hybrid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg"><circle cx="7" cy="8" r="2.5"/><line x1="7" y1="3" x2="7" y2="5"/><line x1="7" y1="11" x2="7" y2="13"/><line x1="2" y1="8" x2="4" y2="8"/><line x1="10" y1="8" x2="12" y2="8"/><circle cx="18" cy="10" r="1" fill="currentColor" stroke="none"/><line x1="18" y1="9" x2="18" y2="5"/><line x1="16.7" y1="10.75" x2="14" y2="12.5"/><line x1="19.3" y1="10.75" x2="22" y2="12.5"/><line x1="18" y1="11" x2="18" y2="21"/></svg>',
+    plant: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="currentColor" stroke="none"/></svg>',
+    mfg:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M2 20V12l6-5v5l6-5v5h5V7"/><path d="M2 20h20"/></svg>',
+    fuel:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M12 22C8.5 22 6 19.5 6 16c0-2 .7-3.5 2-5.5 0 2 1 3 1 3s.5-2.5 2.5-4.5c0 2 1 3 2 3s0-1.5 1.5-3.5c1.5 2.5 2 5 2 7 0 3.5-2.5 6-5 6z"/></svg>',
+    capacity: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" xmlns="http://www.w3.org/2000/svg"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+    grid:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg"><path d="M6 3l-3 7h18l-3-7M3 10l3 11h12l3-11M12 3v7m0 11v3"/></svg>'
+  };
 
   var TYPE_META = {
-    solar:   { icon: '☀️', color: '#f59e0b', label: 'Solar PV' },
-    wind:    { icon: '💨', color: '#3b82f6', label: 'Wind' },
-    hybrid:  { icon: '⚡', color: '#8b5cf6', label: 'Hybrid Solar+Wind' },
-    csp:     { icon: '🔆', color: '#ef4444', label: 'CSP (Concentrated Solar)' }
+    solar:  { icon: ICONS.solar,  color: '#f59e0b', label: 'Solar PV',          std: 'IEC 61215' },
+    wind:   { icon: ICONS.wind,   color: '#3b82f6', label: 'Wind',               std: 'IEC 61400' },
+    hybrid: { icon: ICONS.hybrid, color: '#8b5cf6', label: 'Hybrid Solar+Wind',  std: 'IEC 61215 / IEC 61400' },
+    csp:    { icon: ICONS.csp,    color: '#ef4444', label: 'CSP',                std: 'IEC 62862' }
   };
 
   /* ───────── helpers ───────── */
@@ -133,14 +151,14 @@ HelioScout.Proposals = (function () {
 
     return (
       '<div class="site-card" data-id="' + site.id + '" style="--accent:' + meta.color + '">' +
-        '<div class="site-card__icon" aria-hidden="true">' + meta.icon + '</div>' +
+          '<div class="site-card__icon" aria-hidden="true" style="color:' + meta.color + '">' + meta.icon + '</div>' +
         '<div class="site-card__content">' +
           '<h4 class="site-card__name">' + site.name + '</h4>' +
           '<span class="site-card__type" style="background:' + meta.color + '22;color:' + meta.color + '">' + meta.label + '</span>' +
           '<p class="site-card__desc">' + site.description + '</p>' +
           '<div class="site-card__meta">' +
-            '<span class="site-card__meta-item">⚡ Est. ' + site.estimatedCapacityMW + ' MW</span>' +
-            '<span class="site-card__meta-item">🔌 Near: ' + site.nearestGrid + '</span>' +
+            '<span class="site-card__meta-item"><span class="card-detail-icon">' + ICONS.capacity + '</span>' + site.estimatedCapacityMW + ' MW</span>' +
+            '<span class="site-card__meta-item"><span class="card-detail-icon">' + ICONS.grid + '</span>' + site.nearestGrid + '</span>' +
           '</div>' +
           (site.challenges
             ? '<p class="site-card__challenges"><strong>Challenges:</strong> ' + site.challenges + '</p>'
@@ -161,7 +179,7 @@ HelioScout.Proposals = (function () {
   function generatePlantCard(plant) {
     return (
       '<div class="plant-card" data-id="' + plant.id + '">' +
-        '<div class="plant-card__icon" aria-hidden="true">⚡</div>' +
+        '<div class="plant-card__icon" aria-hidden="true" style="color:#f59e0b">' + ICONS.plant + '</div>' +
         '<div class="plant-card__content">' +
           '<h4 class="plant-card__name">' + plant.name + '</h4>' +
           (plant.nameAr ? '<span class="plant-card__name-ar">' + plant.nameAr + '</span>' : '') +
@@ -172,9 +190,9 @@ HelioScout.Proposals = (function () {
             '<span class="plant-card__spec">Built ' + (plant.yearBuilt || '—') + '</span>' +
           '</div>' +
           '<div class="plant-card__details">' +
-            '<span class="plant-card__detail">🏭 ' + plant.manufacturer + '</span>' +
-            '<span class="plant-card__detail">⛽ ' + plant.fuel + '</span>' +
-            '<span class="plant-card__detail ' + _statusClass(plant.status) + '">● ' + plant.status + '</span>' +
+            '<span class="plant-card__detail"><span class="card-detail-icon">' + ICONS.mfg + '</span>' + plant.manufacturer + '</span>' +
+            '<span class="plant-card__detail"><span class="card-detail-icon">' + ICONS.fuel + '</span>' + plant.fuel + '</span>' +
+            '<span class="plant-card__detail ' + _statusClass(plant.status) + '"><span class="status-dot"></span>' + plant.status + '</span>' +
           '</div>' +
           (plant.notes ? '<p class="plant-card__notes">' + plant.notes + '</p>' : '') +
         '</div>' +
@@ -204,8 +222,8 @@ HelioScout.Proposals = (function () {
     }
 
     var html =
-      '<div class="plant-marker" style="--status-color:' + statusColor + '">' +
-        '<div class="plant-marker__icon">⚡</div>' +
+      '<div class="plant-marker" style="--status-color:' + statusColor + '; color:#f59e0b">' +
+        '<div class="plant-marker__icon">' + ICONS.plant + '</div>' +
         '<div class="plant-marker__label">' + plant.capacityMW + ' MW</div>' +
       '</div>';
 
@@ -232,7 +250,7 @@ HelioScout.Proposals = (function () {
     var meta = TYPE_META[site.type] || TYPE_META.solar;
 
     var html =
-      '<div class="proposal-marker" style="--accent:' + meta.color + '">' +
+      '<div class="proposal-marker" style="--accent:' + meta.color + '; color:' + meta.color + '">' +
         '<div class="proposal-marker__icon">' + meta.icon + '</div>' +
       '</div>';
 

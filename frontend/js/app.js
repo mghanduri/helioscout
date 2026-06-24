@@ -100,6 +100,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 1. Initialize Map
     HelioScout.Map.init('map');
+    HelioScout.Map.addLegend();
     
     // Map Click Handler -> Trigger Assessment
     HelioScout.Map.onMapClick((lat, lon) => {

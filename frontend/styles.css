@@ -151,7 +151,6 @@ html, body {
     letter-spacing: -0.5px;
     user-select: none;
 }
-.logo-icon { font-size: 24px; filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.5)); }
 .logo-accent { 
     background: var(--solar-gradient);
     -webkit-background-clip: text;
@@ -424,6 +423,9 @@ html, body {
     cursor: pointer;
     transition: all var(--transition-fast);
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
 }
 .filter-tab:hover { border-color: var(--text-muted); color: var(--text-secondary); }
 .filter-tab.active {
@@ -454,7 +456,6 @@ html, body {
     cursor: pointer;
 }
 .site-card:hover { border-color: var(--solar-500); transform: translateY(-1px); box-shadow: var(--shadow-md); }
-.site-card__icon { font-size: 20px; flex-shrink: 0; width: 32px; text-align: center; }
 .site-card__content { flex: 1; min-width: 0; }
 .site-card__name { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
 .site-card__type {
@@ -502,7 +503,6 @@ html, body {
     cursor: pointer;
 }
 .plant-card:hover { border-color: var(--warning); }
-.plant-card__icon { font-size: 18px; }
 .plant-card__content { flex: 1; }
 .plant-card__name { font-size: 12px; font-weight: 600; }
 .plant-card__specs { display: flex; gap: var(--space-sm); font-size: 10px; color: var(--text-muted); flex-wrap: wrap; }
@@ -741,12 +741,16 @@ html, body {
     border-bottom: 2px solid transparent;
     color: var(--text-muted);
     font-family: inherit;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 500;
     cursor: pointer;
     transition: all var(--transition-fast);
     white-space: nowrap;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
 }
 .tab-btn:hover { color: var(--text-secondary); border-bottom-color: var(--glass-border); }
 .tab-btn.active { color: var(--solar-400); border-bottom-color: var(--solar-500); }
@@ -1075,7 +1079,6 @@ input[type="range"]::-webkit-slider-thumb:hover { box-shadow: 0 0 0 6px var(--fi
 }
 .initial-loading.fade-out { opacity: 0; pointer-events: none; }
 .initial-loading-content { text-align: center; }
-.loading-logo { font-size: 64px; margin-bottom: var(--space-md); animation: float 2s ease-in-out infinite; }
 @keyframes float {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-10px); }
@@ -1242,3 +1245,273 @@ input[type="range"]::-webkit-slider-thumb:hover { box-shadow: 0 0 0 6px var(--fi
 .recon-table th { color: var(--text-muted); font-weight: 500; }
 .recon-table td.plant-name { color: var(--text-primary); }
 .recon-note { font-size: 11px; color: var(--text-muted); margin-top: 12px; font-style: italic; }
+
+/* ============================================================
+   SVG Icon System — replaces all emoji with ISO/IEC-aligned
+   vector symbols. Rules below ensure SVGs scale correctly in
+   every context they appear.
+   ============================================================ */
+
+/* ------ Logo (navbar) ------ */
+.logo-icon {
+    display: flex;
+    align-items: center;
+    width: 28px;
+    height: 28px;
+    filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.5));
+    flex-shrink: 0;
+}
+.logo-icon svg { width: 100%; height: 100%; }
+
+/* ------ Loading screen logo ------ */
+.loading-logo {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto var(--space-md);
+    animation: float 2s ease-in-out infinite;
+}
+.loading-logo svg { width: 100%; height: 100%; }
+
+/* ------ Assessment tab buttons with SVG icons ------ */
+.tab-icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+/* ------ Filter tabs with SVG icons ------ */
+.filter-icon {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+}
+
+/* ------ Recommendation bar icon ------ */
+.rec-icon {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    width: 18px;
+    height: 18px;
+}
+.rec-icon svg { width: 100%; height: 100%; }
+
+/* ------ Site card icon (proposed RE sites) ------ */
+.site-card__icon {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: unset;     /* override old font-size: 20px */
+}
+.site-card__icon svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Site card meta items (capacity, grid) */
+.site-card__meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+}
+.card-detail-icon {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    width: 12px;
+    height: 12px;
+    opacity: 0.7;
+}
+.card-detail-icon svg { width: 100%; height: 100%; }
+
+/* ------ Plant card icon ------ */
+.plant-card__icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: unset;     /* override old font-size: 18px */
+}
+.plant-card__icon svg { width: 100%; height: 100%; }
+
+/* Plant card detail rows */
+.plant-card__details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px var(--space-sm);
+    margin-top: 4px;
+}
+.plant-card__detail {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+/* Status dot (replaces the ● emoji) */
+.status-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    flex-shrink: 0;
+}
+.plant-card__status--operational .status-dot  { background: var(--success); }
+.plant-card__status--partial .status-dot      { background: var(--warning); }
+.plant-card__status--offline .status-dot      { background: var(--danger); }
+
+/* ------ Map marker icon containers ------ */
+.plant-marker__icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.plant-marker__icon svg { width: 100%; height: 100%; }
+
+.plant-marker__label {
+    font-size: 8px;
+    font-weight: 700;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+    margin-top: 1px;
+    line-height: 1;
+}
+
+.plant-marker {
+    flex-direction: column;
+    gap: 2px;
+    padding: 3px;
+    width: 40px;
+    height: 40px;
+    border: 2px solid var(--status-color, var(--warning));
+}
+
+.proposal-marker__icon {
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.proposal-marker__icon svg { width: 100%; height: 100%; }
+
+.proposal-marker {
+    width: 28px;
+    height: 28px;
+    color: var(--accent, #94a3b8);
+}
+
+/* ============================================================
+   Map Legend (Key) — ISO-compliant symbol reference
+   Positioned bottom-left via Leaflet custom control
+   ============================================================ */
+
+.map-legend {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    color: var(--text-secondary);
+    min-width: 180px;
+    box-shadow: var(--shadow-md);
+    user-select: none;
+    margin-bottom: 8px;
+    margin-left: 8px;
+}
+
+.map-legend__header {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.map-legend__section {
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--glass-border);
+}
+.map-legend__section:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.map-legend__title {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+}
+
+.map-legend__item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    margin-bottom: 4px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.3;
+}
+.map-legend__item:last-child { margin-bottom: 0; }
+
+/* Power plant circle marker (solid outline) */
+.map-legend__marker {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid;
+    background: rgba(26, 34, 51, 0.8);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Proposed site marker (dashed outline + SVG icon inside) */
+.map-legend__marker--proposed {
+    border-style: dashed;
+    background: rgba(26, 34, 51, 0.6);
+}
+.map-legend__marker--proposed svg {
+    width: 9px;
+    height: 9px;
+}
+
+/* Assessment point marker (teardrop style) */
+.map-legend__marker--assessment {
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    border-color: #64748b;
+    background: rgba(100, 116, 139, 0.4);
+}
+
+/* IEC standard reference badge */
+.map-legend__std {
+    font-size: 8px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    margin-left: 2px;
+    opacity: 0.7;
+}

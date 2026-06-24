@@ -188,36 +188,107 @@ HelioScout.Map = (function() {
 
         /**
          * Render Proposed Sites on the map
+         * Uses getSiteMarkerIcon from proposals.js for ISO-standard SVG markers
          */
         renderProposedSites(sites) {
             layers.proposed.clearLayers();
             
             sites.forEach(site => {
-                // Determine color by type
-                let borderColor = '#94a3b8';
-                let iconChar = '⚡';
-                
-                if (site.type === 'solar') { borderColor = '#f59e0b'; iconChar = '☀️'; }
-                else if (site.type === 'wind') { borderColor = '#06b6d4'; iconChar = '💨'; }
-                else if (site.type === 'csp') { borderColor = '#f97316'; iconChar = '🔆'; }
-                else if (site.type === 'hybrid') { borderColor = '#8b5cf6'; iconChar = '⚡'; }
+                const icon = HelioScout.Proposals.getSiteMarkerIcon(site);
 
-                const icon = L.divIcon({
-                    className: 'custom-div-icon',
-                    html: `<div class="proposed-marker" style="border-color: ${borderColor}; color: ${borderColor};">${iconChar}</div>`,
-                    iconSize: [24, 24],
-                    iconAnchor: [12, 12]
-                });
-                
+                // Type label map (IEC standard reference)
+                const typeLabels = {
+                    solar: 'Solar PV \u2014 IEC 61215',
+                    wind:  'Wind \u2014 IEC 61400',
+                    csp:   'CSP \u2014 IEC 62862',
+                    hybrid:'Hybrid Solar+Wind'
+                };
+                const typeColors = {
+                    solar: '#f59e0b',
+                    wind:  '#3b82f6',
+                    csp:   '#f97316',
+                    hybrid:'#8b5cf6'
+                };
+                const borderColor = typeColors[site.type] || '#94a3b8';
+                const typeLabel  = typeLabels[site.type]  || site.type.toUpperCase();
+
                 const marker = L.marker([site.lat, site.lon], { icon }).bindPopup(`
                     <strong>${site.name}</strong><br>
-                    <span style="font-size: 10px; text-transform: uppercase; color: ${borderColor};">${site.type} PROPOSAL</span><br>
+                    <span style="font-size: 10px; text-transform: uppercase; color: ${borderColor};">${typeLabel}</span><br>
                     <div style="font-size: 11px; margin-top: 5px; color: #94a3b8;">Est. ${site.estimatedCapacityMW} MW</div>
                     <button class="btn btn-sm btn-primary" style="margin-top: 8px; width: 100%;" onclick="document.dispatchEvent(new CustomEvent('assess-proposal', {detail: {lat: ${site.lat}, lon: ${site.lon}}}))">Assess Location</button>
                 `);
                 
                 layers.proposed.addLayer(marker);
             });
+        },
+
+        /**
+         * Add an ISO-compliant map legend control to the bottom-left corner.
+         * The legend documents every marker symbol used on the map.
+         */
+        addLegend() {
+            const LegendControl = L.Control.extend({
+                options: { position: 'bottomleft' },
+                onAdd() {
+                    const div = L.DomUtil.create('div', 'map-legend');
+                    div.innerHTML = `
+                        <div class="map-legend__header">Map Legend</div>
+                        <div class="map-legend__section">
+                            <div class="map-legend__title">Existing Power Plants (GECOL)</div>
+                            <div class="map-legend__item">
+                                <span class="map-legend__marker" style="border-color:#10b981;"></span>
+                                Operational
+                            </div>
+                            <div class="map-legend__item">
+                                <span class="map-legend__marker" style="border-color:#f59e0b;"></span>
+                                Partially Operational
+                            </div>
+                            <div class="map-legend__item">
+                                <span class="map-legend__marker" style="border-color:#ef4444;"></span>
+                                Offline
+                            </div>
+                        </div>
+                        <div class="map-legend__section">
+                            <div class="map-legend__title">Proposed RE Sites</div>
+                            <div class="map-legend__item">
+                                <span class="map-legend__marker map-legend__marker--proposed" style="border-color:#f59e0b; color:#f59e0b;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41M2 12h2m16 0h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                                </span>
+                                Solar PV <span class="map-legend__std">IEC 61215</span>
+                            </div>
+                            <div class="map-legend__item">
+                                <span class="map-legend__marker map-legend__marker--proposed" style="border-color:#3b82f6; color:#3b82f6;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><line x1="12" y1="10.5" x2="12" y2="4"/><line x1="10.7" y1="12.75" x2="5" y2="16"/><line x1="13.3" y1="12.75" x2="19" y2="16"/><line x1="12" y1="13.5" x2="12" y2="22"/></svg>
+                                </span>
+                                Wind <span class="map-legend__std">IEC 61400</span>
+                            </div>
+                            <div class="map-legend__item">
+                                <span class="map-legend__marker map-legend__marker--proposed" style="border-color:#f97316; color:#f97316;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M4 18Q8 6 12 8Q16 6 20 18"/><line x1="12" y1="8" x2="12" y2="18"/><circle cx="12" cy="7" r="1.5" fill="currentColor" stroke="none"/></svg>
+                                </span>
+                                CSP <span class="map-legend__std">IEC 62862</span>
+                            </div>
+                            <div class="map-legend__item">
+                                <span class="map-legend__marker map-legend__marker--proposed" style="border-color:#8b5cf6; color:#8b5cf6;">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="7" cy="8" r="2.5"/><line x1="7" y1="3" x2="7" y2="5"/><line x1="7" y1="11" x2="7" y2="13"/><line x1="2" y1="8" x2="4" y2="8"/><line x1="10" y1="8" x2="12" y2="8"/><circle cx="18" cy="10" r="1" fill="currentColor" stroke="none"/><line x1="18" y1="9" x2="18" y2="5"/><line x1="16.7" y1="10.75" x2="14" y2="12.5"/><line x1="19.3" y1="10.75" x2="22" y2="12.5"/><line x1="18" y1="11" x2="18" y2="21"/></svg>
+                                </span>
+                                Hybrid
+                            </div>
+                        </div>
+                        <div class="map-legend__section">
+                            <div class="map-legend__title">Assessment</div>
+                            <div class="map-legend__item">
+                                <span class="map-legend__marker map-legend__marker--assessment"></span>
+                                Assessed Location
+                            </div>
+                        </div>
+                    `;
+                    L.DomEvent.disableClickPropagation(div);
+                    return div;
+                }
+            });
+            new LegendControl().addTo(map);
         },
 
         flyTo(lat, lon, zoom = 9) {
