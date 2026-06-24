@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Interactive renewable energy assessment tool. Assess solar, wind, CSP, and geothermal potential at any location using real satellite data from NASA and EU JRC.">
+    <title>HelioScout — Renewable Energy Site Assessment Tool</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- Leaflet.js -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Top Navigation Bar -->
+        <nav id="top-bar">
+            <div id="nav-left">
+                <div id="logo">
+                    <span class="logo-icon">⚡</span>
+                    <span class="logo-text">Helio<span class="logo-accent">Scout</span></span>
+                </div>
+            </div>
+            <div id="nav-center">
+                <div id="search-container">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                    <input type="text" id="search-input" placeholder="Search location..." autocomplete="off">
+                    <div id="search-results" class="hidden"></div>
+                </div>
+            </div>
+            <div id="nav-right">
+                <div id="mode-toggle">
+                    <button id="mode-btn" class="mode-btn active" data-mode="libya" title="Libya Mode — includes power plants and gas displacement analysis">
+                        <span class="mode-indicator"></span>
+                        <span class="mode-label">Libya Mode</span>
+                    </button>
+                    <button id="mode-universal-btn" class="mode-btn" data-mode="universal" title="Universal Mode — assess any location on Earth">
+                        <span class="mode-indicator"></span>
+                        <span class="mode-label">Universal</span>
+                    </button>
+                </div>
+                <div id="coordinates-display">
+                    <span id="coord-lat">32.9000°N</span>
+                    <span id="coord-lon">13.1000°E</span>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <div id="main-content">
+            <!-- Left Control Panel -->
+            <aside id="control-panel">
+                <div class="panel-section">
+                    <h3 class="panel-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                        Map Layers
+                    </h3>
+                    <div class="layer-toggles">
+                        <label class="layer-toggle" id="toggle-satellite">
+                            <input type="checkbox" name="layer" value="satellite">
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <span class="toggle-label">Satellite View</span>
+                        </label>
+                        <label class="layer-toggle" id="toggle-plants">
+                            <input type="checkbox" name="layer" value="plants" checked>
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <span class="toggle-label">Power Plants</span>
+                        </label>
+                        <label class="layer-toggle" id="toggle-proposed">
+                            <input type="checkbox" name="layer" value="proposed" checked>
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <span class="toggle-label">Proposed Sites</span>
+                        </label>
+                        <label class="layer-toggle" id="toggle-grid">
+                            <input type="checkbox" name="layer" value="grid">
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <span class="toggle-label">Assessment Grid</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="panel-section" id="pinned-section">
+                    <h3 class="panel-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                        Pinned Sites
+                        <span id="pinned-count" class="badge">0</span>
+                    </h3>
+                    <div id="pinned-list" class="pinned-list">
+                        <div class="empty-state">
+                            <p>Click on the map to assess a location, then pin it for comparison.</p>
+                        </div>
+                    </div>
+                    <button id="compare-btn" class="btn btn-primary btn-full hidden">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+                        Compare Sites
+                    </button>
+                </div>
+
+                <div class="panel-section" id="proposals-section">
+                    <h3 class="panel-title">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        Proposed Sites
+                    </h3>
+                    <div id="proposals-filter" class="filter-tabs">
+                        <button class="filter-tab active" data-filter="all">All</button>
+                        <button class="filter-tab" data-filter="solar">☀️ Solar</button>
+                        <button class="filter-tab" data-filter="wind">💨 Wind</button>
+                        <button class="filter-tab" data-filter="hybrid">⚡ Hybrid</button>
+                        <button class="filter-tab" data-filter="csp">🔆 CSP</button>
+                    </div>
+                    <div id="proposals-list" class="proposals-list">
+                        <!-- Populated by proposals.js -->
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Map Container -->
+            <div id="map-wrapper">
+                <div id="map"></div>
+                <div id="map-tooltip" class="hidden"></div>
+            </div>
+
+            <!-- Right Assessment Panel -->
+            <aside id="assessment-panel" class="hidden">
+                <div id="assessment-close" title="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </div>
+
+                <!-- Loading State -->
+                <div id="assessment-loading" class="hidden">
+                    <div class="loading-spinner"></div>
+                    <p class="loading-text">Fetching satellite data...</p>
+                    <div class="loading-sources">
+                        <span class="loading-source" id="load-nasa">NASA POWER</span>
+                        <span class="loading-source" id="load-pvgis">EU PVGIS</span>
+                        <span class="loading-source" id="load-meteo">Open-Meteo</span>
+                    </div>
+                </div>
+
+                <!-- Assessment Content -->
+                <div id="assessment-content" class="hidden">
+                    <!-- Header with overall score -->
+                    <div id="assessment-header">
+                        <div class="assessment-location">
+                            <h2 id="assessment-location-name">Location</h2>
+                            <span id="assessment-coords" class="text-muted"></span>
+                            <span id="assessment-elevation" class="text-muted"></span>
+                        </div>
+                        <div id="overall-score-ring">
+                            <svg viewBox="0 0 120 120" class="score-ring">
+                                <circle cx="60" cy="60" r="52" class="score-ring-bg"/>
+                                <circle cx="60" cy="60" r="52" class="score-ring-fill" id="score-ring-fill"/>
+                                <text x="60" y="54" class="score-ring-value" id="score-ring-value">—</text>
+                                <text x="60" y="72" class="score-ring-label">SCORE</text>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <div id="assessment-recommendation" class="recommendation-bar">
+                        <span class="rec-icon">🎯</span>
+                        <span id="rec-text">Analysing...</span>
+                    </div>
+
+                    <!-- Assessment Tabs -->
+                    <div id="assessment-tabs" class="tab-nav">
+                        <button class="tab-btn active" data-tab="solar">☀️ Solar</button>
+                        <button class="tab-btn" data-tab="wind">💨 Wind</button>
+                        <button class="tab-btn" data-tab="csp">🔆 CSP</button>
+                        <button class="tab-btn" data-tab="charts">📊 Charts</button>
+                        <button class="tab-btn" data-tab="financial" id="financial-tab-btn">💰 Finance</button>
+                    </div>
+
+                    <!-- Solar Tab -->
+                    <div id="tab-solar" class="tab-content active">
+                        <div class="metric-grid">
+                            <div class="metric-card solar-accent">
+                                <div class="metric-label">Global Horizontal Irradiance</div>
+                                <div class="metric-value" id="metric-ghi">—</div>
+                                <div class="metric-unit">kWh/m²/day</div>
+                            </div>
+                            <div class="metric-card solar-accent">
+                                <div class="metric-label">PV Energy Yield</div>
+                                <div class="metric-value" id="metric-pvout">—</div>
+                                <div class="metric-unit">kWh/kWp/year</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Capacity Factor</div>
+                                <div class="metric-value" id="metric-solar-cf">—</div>
+                                <div class="metric-unit">%</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Optimal Tilt</div>
+                                <div class="metric-value" id="metric-tilt">—</div>
+                                <div class="metric-unit">degrees</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Avg Temperature</div>
+                                <div class="metric-value" id="metric-temp">—</div>
+                                <div class="metric-unit">°C</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Temp Impact</div>
+                                <div class="metric-value" id="metric-temp-impact">—</div>
+                                <div class="metric-unit" id="metric-temp-impact-desc"></div>
+                            </div>
+                        </div>
+                        <div class="score-bar-container">
+                            <div class="score-bar-label">Solar PV Score</div>
+                            <div class="score-bar">
+                                <div class="score-bar-fill" id="solar-score-bar"></div>
+                                <span class="score-bar-value" id="solar-score-value">—</span>
+                            </div>
+                            <div class="score-bar-rating" id="solar-rating">—</div>
+                        </div>
+                    </div>
+
+                    <!-- Wind Tab -->
+                    <div id="tab-wind" class="tab-content">
+                        <div class="metric-grid">
+                            <div class="metric-card wind-accent">
+                                <div class="metric-label">Wind Speed (100m)</div>
+                                <div class="metric-value" id="metric-wind100">—</div>
+                                <div class="metric-unit">m/s</div>
+                            </div>
+                            <div class="metric-card wind-accent">
+                                <div class="metric-label">Power Density</div>
+                                <div class="metric-value" id="metric-wpd">—</div>
+                                <div class="metric-unit">W/m²</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Wind Class</div>
+                                <div class="metric-value" id="metric-wind-class">—</div>
+                                <div class="metric-unit" id="metric-wind-class-desc"></div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Est. Capacity Factor</div>
+                                <div class="metric-value" id="metric-wind-cf">—</div>
+                                <div class="metric-unit">%</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Wind Speed (50m)</div>
+                                <div class="metric-value" id="metric-wind50">—</div>
+                                <div class="metric-unit">m/s</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Wind Speed (10m)</div>
+                                <div class="metric-value" id="metric-wind10">—</div>
+                                <div class="metric-unit">m/s</div>
+                            </div>
+                        </div>
+                        <div class="score-bar-container">
+                            <div class="score-bar-label">Wind Score</div>
+                            <div class="score-bar">
+                                <div class="score-bar-fill wind-fill" id="wind-score-bar"></div>
+                                <span class="score-bar-value" id="wind-score-value">—</span>
+                            </div>
+                            <div class="score-bar-rating" id="wind-rating">—</div>
+                        </div>
+                    </div>
+
+                    <!-- CSP Tab -->
+                    <div id="tab-csp" class="tab-content">
+                        <div class="metric-grid">
+                            <div class="metric-card csp-accent">
+                                <div class="metric-label">Direct Normal Irradiance</div>
+                                <div class="metric-value" id="metric-dni">—</div>
+                                <div class="metric-unit">kWh/m²/day</div>
+                            </div>
+                            <div class="metric-card csp-accent">
+                                <div class="metric-label">Annual DNI</div>
+                                <div class="metric-value" id="metric-dni-annual">—</div>
+                                <div class="metric-unit">kWh/m²/year</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">CSP Suitability</div>
+                                <div class="metric-value" id="metric-csp-suit">—</div>
+                                <div class="metric-unit"></div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-label">Geothermal Indicator</div>
+                                <div class="metric-value" id="metric-geo">—</div>
+                                <div class="metric-unit" id="metric-geo-desc"></div>
+                            </div>
+                        </div>
+                        <div class="score-bar-container">
+                            <div class="score-bar-label">CSP Score</div>
+                            <div class="score-bar">
+                                <div class="score-bar-fill csp-fill" id="csp-score-bar"></div>
+                                <span class="score-bar-value" id="csp-score-value">—</span>
+                            </div>
+                            <div class="score-bar-rating" id="csp-rating">—</div>
+                        </div>
+                    </div>
+
+                    <!-- Charts Tab -->
+                    <div id="tab-charts" class="tab-content">
+                        <div class="chart-container">
+                            <h4 class="chart-title">Monthly Resource Profile</h4>
+                            <canvas id="monthly-chart"></canvas>
+                        </div>
+                        <div class="chart-container">
+                            <h4 class="chart-title">Resource Radar</h4>
+                            <canvas id="radar-chart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Financial Tab (Libya Mode) -->
+                    <div id="tab-financial" class="tab-content">
+                        <div class="financial-header">
+                            <h4>Gas Displacement Analysis</h4>
+                            <p class="text-muted">Estimate the value of gas freed for export by deploying renewables.</p>
+                        </div>
+
+                        <div class="financial-config">
+                            <div class="config-group">
+                                <label for="fin-capacity">Project Capacity (MW)</label>
+                                <input type="range" id="fin-capacity" min="10" max="1000" value="100" step="10">
+                                <span class="range-value" id="fin-capacity-val">100 MW</span>
+                            </div>
+                            <div class="config-group">
+                                <label for="fin-turbine">Displaced Turbine Type</label>
+                                <select id="fin-turbine">
+                                    <option value="ge-9e">GE Frame 9E (OCGT, E-class)</option>
+                                    <option value="ge-9f">GE Frame 9F (OCGT, F-class)</option>
+                                    <option value="siemens-sgt5-2000e">Siemens SGT5-2000E (OCGT)</option>
+                                    <option value="siemens-sgt5-4000f" selected>Siemens SGT5-4000F (OCGT)</option>
+                                    <option value="ccgt-eclass">CCGT (E-class)</option>
+                                    <option value="ccgt-fclass">CCGT (F-class)</option>
+                                    <option value="generic-ocgt">Generic OCGT (older)</option>
+                                </select>
+                            </div>
+                            <div class="config-group">
+                                <label for="fin-age">Plant Age (years)</label>
+                                <input type="range" id="fin-age" min="0" max="40" value="15" step="1">
+                                <span class="range-value" id="fin-age-val">15 yrs</span>
+                            </div>
+                            <div class="config-group">
+                                <label for="fin-domestic-price">Domestic Gas Price ($/MMBtu)</label>
+                                <input type="range" id="fin-domestic-price" min="0.5" max="5" value="1.0" step="0.1">
+                                <span class="range-value" id="fin-domestic-price-val">$1.00</span>
+                            </div>
+                            <div class="config-group">
+                                <label for="fin-export-price">Export-Parity Gas Price ($/MMBtu)</label>
+                                <input type="range" id="fin-export-price" min="4" max="20" value="10" step="0.5">
+                                <span class="range-value" id="fin-export-price-val">$10.00</span>
+                            </div>
+                        </div>
+
+                        <div class="financial-results" id="financial-results">
+                            <div class="metric-grid">
+                                <div class="metric-card financial-accent">
+                                    <div class="metric-label">Gas Freed (Annual)</div>
+                                    <div class="metric-value" id="fin-gas-freed">—</div>
+                                    <div class="metric-unit">MMBtu/year</div>
+                                </div>
+                                <div class="metric-card financial-accent">
+                                    <div class="metric-label">Export Revenue Value</div>
+                                    <div class="metric-value" id="fin-export-value">—</div>
+                                    <div class="metric-unit">USD/year</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-label">Domestic Savings</div>
+                                    <div class="metric-value" id="fin-domestic-value">—</div>
+                                    <div class="metric-unit">USD/year</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-label">LCOE (Solar PV)</div>
+                                    <div class="metric-value" id="fin-lcoe">—</div>
+                                    <div class="metric-unit">USD/MWh</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-label">CO₂ Avoided</div>
+                                    <div class="metric-value" id="fin-co2">—</div>
+                                    <div class="metric-unit">tonnes/year</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-label">Payback Period</div>
+                                    <div class="metric-value" id="fin-payback">—</div>
+                                    <div class="metric-unit">years</div>
+                                </div>
+                            </div>
+                            <div class="npv-highlight">
+                                <div class="npv-label">25-Year NPV (Export-Parity)</div>
+                                <div class="npv-value" id="fin-npv">—</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div id="assessment-actions">
+                        <button id="pin-site-btn" class="btn btn-primary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                            Pin Site
+                        </button>
+                        <button id="export-btn" class="btn btn-secondary">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Export
+                        </button>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Comparison Modal -->
+        <div id="comparison-modal" class="modal-overlay hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Site Comparison</h2>
+                    <button id="modal-close" class="modal-close">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </button>
+                </div>
+                <div id="comparison-body" class="modal-body">
+                    <!-- Populated by compare.js -->
+                </div>
+                <div class="modal-footer">
+                    <button id="export-comparison-btn" class="btn btn-secondary">Export CSV</button>
+                    <button id="close-comparison-btn" class="btn btn-primary">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Overlay for initial load -->
+        <div id="initial-loading" class="initial-loading">
+            <div class="initial-loading-content">
+                <div class="loading-logo">⚡</div>
+                <h1>Helio<span class="logo-accent">Scout</span></h1>
+                <p>Loading renewable energy assessment tool...</p>
+                <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Modules (order matters) -->
+    <script src="js/api.js"></script>
+    <script src="js/financial.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/map.js"></script>
+    <script src="js/compare.js"></script>
+    <script src="js/proposals.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
