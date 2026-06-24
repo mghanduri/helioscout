@@ -11,7 +11,8 @@ HelioScout.Map = (function() {
     let layers = {
         plants: null,
         proposed: null,
-        grid: null
+        grid: null,
+        solarHeatmap: null
     };
 
     // Callback when map is clicked
@@ -58,6 +59,20 @@ HelioScout.Map = (function() {
         layers.plants = L.layerGroup().addTo(map);
         layers.proposed = L.layerGroup().addTo(map);
         layers.grid = L.layerGroup(); // Not added by default
+
+        // Solar Irradiance overlay via NASA GIBS WMS
+        // MERRA-2 monthly mean surface downwelling shortwave flux (≈ GHI)
+        // Data: NASA/MERRA-2 via GIBS — public domain, no API key required
+        layers.solarHeatmap = L.tileLayer.wms(
+            'https://gibs.earthdata.nasa.gov/wms/epsg3857/best/wms.cgi', {
+                layers: 'MERRA2_Surface_Downwelling_Shortwave_Flux_Monthly_Mean',
+                format: 'image/png',
+                transparent: true,
+                opacity: 0.55,
+                TIME: '2024-06-01',
+                attribution: 'Solar irradiance: <a href="https://gmao.gsfc.nasa.gov/reanalysis/MERRA-2/" target="_blank">NASA MERRA-2</a> via <a href="https://earthdata.nasa.gov/eosdis/science-system-description/eosdis-components/gibs" target="_blank">NASA GIBS</a>'
+            }
+        ); // Not added by default
 
         // Handle Map Clicks
         map.on('click', function(e) {
