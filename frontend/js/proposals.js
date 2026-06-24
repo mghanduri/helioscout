@@ -1,11 +1,11 @@
 /**
- * RenewMap.Proposals — Manages pre-loaded proposed RE sites and existing power plants
+ * HelioScout.Proposals — Manages pre-loaded proposed RE sites and existing power plants
  * Loads data from JSON files, provides filtering, nearest-plant lookup,
  * and generates HTML cards and Leaflet marker icons.
  */
-window.RenewMap = window.RenewMap || {};
+window.HelioScout = window.HelioScout || {};
 
-RenewMap.Proposals = (function () {
+HelioScout.Proposals = (function () {
   let sites = [];
   let plants = [];
 
@@ -48,8 +48,8 @@ RenewMap.Proposals = (function () {
     var basePath = '';
 
     // Detect base path: support both root-relative and directory-relative loading
-    if (typeof window !== 'undefined' && window.RENEWMAP_BASE) {
-      basePath = window.RENEWMAP_BASE;
+    if (typeof window !== 'undefined' && window.HELIOSCOUT_BASE) {
+      basePath = window.HELIOSCOUT_BASE;
     }
 
     var [sitesRes, plantsRes] = await Promise.all([

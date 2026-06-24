@@ -1,10 +1,10 @@
-window.RenewMap = window.RenewMap || {};
+window.HelioScout = window.HelioScout || {};
 
 /**
  * Financial Calculation Engine (Gas Displacement & LCOE)
  * Specially designed for the Libyan NOC competition context.
  */
-RenewMap.Financial = (function() {
+HelioScout.Financial = (function() {
 
     // Database of common turbine architectures in North Africa
     const TURBINE_DATABASE = [
@@ -54,6 +54,36 @@ RenewMap.Financial = (function() {
 
         getTurbineById(id) {
             return TURBINE_DATABASE.find(t => t.id === id) || TURBINE_DATABASE.find(t => t.id === 'generic-ocgt');
+        },
+
+        /**
+         * Map a plant's turbine class + configuration to the closest TURBINE_DATABASE id.
+         * Used to auto-select the displaced turbine from the nearest GECOL plant.
+         * @param {string} turbineClass — e.g. 'E-class', 'F-class', 'Legacy'
+         * @param {string} config — 'OCGT' or 'CCGT'
+         * @returns {string} turbine id
+         */
+        classConfigToTurbineId(turbineClass, config) {
+            const cls = (turbineClass || '').toLowerCase();
+            const cfg = (config || '').toUpperCase();
+            const fClass = cls.indexOf('f') !== -1; // 'f-class'
+            const eClass = cls.indexOf('e') !== -1; // 'e-class'
+
+            if (cfg === 'CCGT') {
+                return fClass ? 'ccgt-fclass' : 'ccgt-eclass';
+            }
+            // OCGT (default)
+            if (fClass) return 'siemens-sgt5-4000f'; // representative F-class OCGT
+            if (eClass) return 'siemens-sgt5-2000e'; // representative E-class OCGT
+            return 'generic-ocgt'; // legacy / unknown
+        },
+
+        /**
+         * Public wrapper around the internal ambient + age derating, used by the
+         * fleet reconciliation module. Returns BTU/kWh.
+         */
+        deriveFleetHeatRate(isoHeatRate, ambientTempC, ageYears, config) {
+            return derateTurbineHeatRate(isoHeatRate, ambientTempC, ageYears, config);
         },
 
         /**

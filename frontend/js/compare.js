@@ -1,11 +1,11 @@
 /**
- * RenewMap.Compare — Site comparison and ranking module
+ * HelioScout.Compare — Site comparison and ranking module
  * Manages pinned site assessments for side-by-side comparison,
  * table generation, ranking, and CSV export.
  */
-window.RenewMap = window.RenewMap || {};
+window.HelioScout = window.HelioScout || {};
 
-RenewMap.Compare = (function () {
+HelioScout.Compare = (function () {
   const MAX_PINS = 5;
   let pinnedSites = [];
 
@@ -42,7 +42,7 @@ RenewMap.Compare = (function () {
 
   /**
    * Add a site assessment to the comparison set.
-   * @param {Object} siteData — { id, name, lat, lon, solar, wind, csp, geothermal, composite, financial }
+   * @param {Object} siteData — { id, name, lat, lon, solar, wind, csp, composite, financial }
    * @returns {boolean} true if added, false if at capacity or duplicate
    */
   function pinSite(siteData) {
@@ -140,11 +140,10 @@ RenewMap.Compare = (function () {
       ['Composite Score', function (s) { return s.composite; }, 0, '/100', true],
       ['Recommendation', function (s) { return _recommendation(s.composite); }, null, '', false],
 
-      // Financial (optional)
+      // Financial (Libya mode only)
       ['LCOE (Solar PV)', function (s) { return s.financial && s.financial.lcoeSolar; }, 1, '$/MWh', false],
-      ['LCOE (Wind)', function (s) { return s.financial && s.financial.lcoeWind; }, 1, '$/MWh', false],
-      ['Gas Displacement', function (s) { return s.financial && s.financial.gasDisplacement; }, 1, 'MMscf/yr', false],
-      ['Gas Value', function (s) { return s.financial && s.financial.gasValue; }, 1, '$M/yr', false]
+      ['Gas Freed', function (s) { return s.financial && s.financial.gasDisplacement; }, 0, 'MMBtu/yr', false],
+      ['Gas Value (export)', function (s) { return s.financial && s.financial.gasValue; }, 1, '$M/yr', false]
     ];
 
     metrics.forEach(function (m) {
@@ -171,8 +170,8 @@ RenewMap.Compare = (function () {
       '<tbody>' + rows.slice(1).join('') + '</tbody>' +
       '</table>' +
       '<div class="compare-actions">' +
-        '<button class="compare-actions__export" onclick="RenewMap.Compare.exportCSV()">⬇ Export CSV</button>' +
-        '<button class="compare-actions__clear" onclick="RenewMap.Compare.clearAll(); if(RenewMap.Compare.onUpdate) RenewMap.Compare.onUpdate();">Clear All</button>' +
+        '<button class="compare-actions__export" onclick="HelioScout.Compare.exportCSV()">⬇ Export CSV</button>' +
+        '<button class="compare-actions__clear" onclick="HelioScout.Compare.clearAll(); if(HelioScout.Compare.onUpdate) HelioScout.Compare.onUpdate();">Clear All</button>' +
       '</div>' +
     '</div>';
   }
@@ -222,8 +221,8 @@ RenewMap.Compare = (function () {
       'Wind Speed 100m (m/s)', 'Wind Capacity Factor (%)', 'Wind Score',
       'DNI (kWh/m²/yr)', 'CSP Score',
       'Composite Score', 'Recommendation',
-      'LCOE Solar ($/MWh)', 'LCOE Wind ($/MWh)',
-      'Gas Displacement (MMscf/yr)', 'Gas Value ($M/yr)'
+      'LCOE Solar ($/MWh)',
+      'Gas Freed (MMBtu/yr)', 'Gas Value Export ($M/yr)'
     ];
 
     var csvRows = [headers.join(',')];
@@ -244,8 +243,7 @@ RenewMap.Compare = (function () {
         _fmt(s.composite, 0),
         '"' + _recommendation(s.composite) + '"',
         _fmt(s.financial && s.financial.lcoeSolar, 2),
-        _fmt(s.financial && s.financial.lcoeWind, 2),
-        _fmt(s.financial && s.financial.gasDisplacement, 1),
+        _fmt(s.financial && s.financial.gasDisplacement, 0),
         _fmt(s.financial && s.financial.gasValue, 2)
       ];
       csvRows.push(row.join(','));
@@ -257,7 +255,7 @@ RenewMap.Compare = (function () {
 
     var link = document.createElement('a');
     link.href = url;
-    link.download = 'renewmap-comparison-' + new Date().toISOString().slice(0, 10) + '.csv';
+    link.download = 'helioscout-comparison-' + new Date().toISOString().slice(0, 10) + '.csv';
     link.style.display = 'none';
     document.body.appendChild(link);
     link.click();

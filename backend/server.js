@@ -49,5 +49,5 @@ app.get('/health', (req, res) => {
 
 // Start the server
 app.listen(PORT, () => {
-    console.log(`RenewMap backend running on port ${PORT}`);
+    console.log(`HelioScout backend running on port ${PORT}`);
 });

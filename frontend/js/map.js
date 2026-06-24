@@ -1,9 +1,9 @@
-window.RenewMap = window.RenewMap || {};
+window.HelioScout = window.HelioScout || {};
 
 /**
  * Map Orchestration Layer using Leaflet.js
  */
-RenewMap.Map = (function() {
+HelioScout.Map = (function() {
     let map = null;
     let clickMarker = null;
     
@@ -49,7 +49,7 @@ RenewMap.Map = (function() {
         darkTheme.addTo(map);
 
         // Store references for toggling
-        RenewMap.Map.baseLayers = {
+        HelioScout.Map.baseLayers = {
             dark: darkTheme,
             satellite: satellite
         };
@@ -125,11 +125,11 @@ RenewMap.Map = (function() {
          */
         setBaseLayer(type) {
             if (type === 'satellite') {
-                map.removeLayer(RenewMap.Map.baseLayers.dark);
-                RenewMap.Map.baseLayers.satellite.addTo(map);
+                map.removeLayer(HelioScout.Map.baseLayers.dark);
+                HelioScout.Map.baseLayers.satellite.addTo(map);
             } else {
-                map.removeLayer(RenewMap.Map.baseLayers.satellite);
-                RenewMap.Map.baseLayers.dark.addTo(map);
+                map.removeLayer(HelioScout.Map.baseLayers.satellite);
+                HelioScout.Map.baseLayers.dark.addTo(map);
             }
         },
 
@@ -153,7 +153,7 @@ RenewMap.Map = (function() {
             layers.plants.clearLayers();
             
             plants.forEach(plant => {
-                const icon = RenewMap.Proposals.getPlantMarkerIcon(plant);
+                const icon = HelioScout.Proposals.getPlantMarkerIcon(plant);
                 
                 const marker = L.marker([plant.lat, plant.lon], { icon }).bindPopup(`
                     <div style="text-align: center; margin-bottom: 5px;">

@@ -1,9 +1,9 @@
-window.RenewMap = window.RenewMap || {};
+window.HelioScout = window.HelioScout || {};
 
 /**
  * Chart rendering logic using Chart.js
  */
-RenewMap.Charts = (function() {
+HelioScout.Charts = (function() {
     let monthlyChartInstance = null;
     let radarChartInstance = null;
 
@@ -104,14 +104,13 @@ RenewMap.Charts = (function() {
             radarChartInstance = new Chart(ctx, {
                 type: 'radar',
                 data: {
-                    labels: ['Solar PV', 'Wind', 'CSP', 'Geothermal'],
+                    labels: ['Solar PV', 'Wind', 'CSP'],
                     datasets: [{
                         label: 'Resource Score',
                         data: [
                             scores.solar || 0,
                             scores.wind || 0,
-                            scores.csp || 0,
-                            scores.geo || 0
+                            scores.csp || 0
                         ],
                         backgroundColor: 'rgba(16, 185, 129, 0.2)', // financial-500 tint
                         borderColor: 'rgba(16, 185, 129, 1)',

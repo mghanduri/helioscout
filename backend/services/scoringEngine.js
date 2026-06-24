@@ -1,10 +1,13 @@
+// NASA POWER climatology keys months as JAN..DEC with ANN for the annual value.
+const NASA_MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
 // Helper to get annual value
-const getAnnual = (nasaParam) => nasaParam ? nasaParam["13"] : 0;
+const getAnnual = (nasaParam) => (nasaParam && nasaParam.ANN != null) ? nasaParam.ANN : 0;
 
 // Helper to get monthly array
 const getMonthly = (nasaParam) => {
     if (!nasaParam) return Array(12).fill(0);
-    return [1,2,3,4,5,6,7,8,9,10,11,12].map(m => nasaParam[m.toString()] || 0);
+    return NASA_MONTHS.map(m => nasaParam[m] || 0);
 };
 
 function assessSolar(nasaData, pvgisData) {
@@ -13,11 +16,20 @@ function assessSolar(nasaData, pvgisData) {
     const ghi = { annual: getAnnual(nasaData.ALLSKY_SFC_SW_DWN), monthly: getMonthly(nasaData.ALLSKY_SFC_SW_DWN) };
     const dni = { annual: getAnnual(nasaData.ALLSKY_SFC_SW_DNI), monthly: getMonthly(nasaData.ALLSKY_SFC_SW_DNI) };
     const avgTemp = getAnnual(nasaData.T2M);
-    
+
+    // Warm-season representative temperature for realistic gas-turbine derating.
+    // Uses the long-term climatological daily-max (T2M_MAX); falls back to the
+    // hottest monthly mean temperature, then to avgTemp + a nominal offset.
+    let summerTemp = getAnnual(nasaData.T2M_MAX);
+    if (!summerTemp) {
+        const monthlyTemps = getMonthly(nasaData.T2M);
+        summerTemp = monthlyTemps.length ? Math.max(...monthlyTemps) : avgTemp + 10;
+    }
+
     let pvOutput = null;
     let optimalTilt = null;
-    let monthlyProfile = ghi.monthly; 
-    
+    let monthlyProfile = ghi.monthly;
+
     if (pvgisData && pvgisData.totals) {
         pvOutput = pvgisData.totals.fixed.E_y;
         optimalTilt = pvgisData.totals.fixed.optimal_inclination || 30;
@@ -43,17 +55,38 @@ function assessSolar(nasaData, pvgisData) {
 
     score = Math.max(0, Math.min(100, score));
 
-    return { ghi, dni, pvOutput, optimalTilt, capacityFactor, monthlyProfile, avgTemp, tempImpact, tempDesc, score, rating, color };
+    return { ghi, dni, pvOutput, optimalTilt, capacityFactor, monthlyProfile, avgTemp, summerTemp, tempImpact, tempDesc, score, rating, color };
 }
 
-function assessWind(meteoData, nasaData) {
-    let v10 = 0, v50 = 0, v80 = 0, v100 = 0;
-    
-    if (meteoData && meteoData.wind) {
-        v10 = meteoData.wind.mean10m; v80 = meteoData.wind.mean80m; v100 = meteoData.wind.mean100m; v50 = (v10 + v80) / 2;
-    } else if (nasaData) {
-        v10 = getAnnual(nasaData.WS10M); v50 = getAnnual(nasaData.WS50M); v100 = v50 * Math.pow((100/50), 0.143);
+function assessWind(nasaData, meteoData) {
+    // Primary source: NASA POWER long-term climatology (WS10M / WS50M).
+    // We derive the local wind-shear exponent from the 10 m -> 50 m ratio,
+    // then extrapolate to 100 m hub height. Open-Meteo (a 14-day forecast) is
+    // used only as a cross-check / elevation source, never as the basis for the score.
+    let v10 = 0, v50 = 0, v100 = 0;
+    let source = 'NASA POWER (long-term climatology)';
+    let alpha = 0.143; // default 1/7-power-law exponent
+
+    if (nasaData && getAnnual(nasaData.WS50M)) {
+        v10 = getAnnual(nasaData.WS10M);
+        v50 = getAnnual(nasaData.WS50M);
+
+        if (v10 > 0 && v50 > 0) {
+            // alpha = ln(v50/v10) / ln(50/10)
+            const derived = Math.log(v50 / v10) / Math.log(50 / 10);
+            if (isFinite(derived)) alpha = Math.max(0.10, Math.min(0.40, derived));
+        }
+        v100 = v50 * Math.pow(100 / 50, alpha);
+    } else if (meteoData && meteoData.wind && meteoData.wind.mean100m) {
+        // Fallback only if climatology unavailable
+        v10 = meteoData.wind.mean10m;
+        v100 = meteoData.wind.mean100m;
+        v50 = v100 * Math.pow(50 / 100, alpha);
+        source = 'Open-Meteo (short-term, fallback)';
     }
+
+    // Optional cross-check value from Open-Meteo forecast (not used for scoring)
+    const crossCheck100m = (meteoData && meteoData.wind) ? meteoData.wind.mean100m : null;
 
     if (v100 === 0) return null;
 
@@ -69,7 +102,7 @@ function assessWind(meteoData, nasaData) {
     else if (v100 >= 5.0) { score = 50; rating = 'Moderate'; color = '#67e8f9'; windClassDesc = 'IEC Class IV (Very Low Wind)'; }
     else { score = 25; rating = 'Poor'; color = '#64748b'; windClassDesc = 'Below commercial threshold'; }
 
-    return { v10, v50, v80, v100, wpd, windClassDesc, estimatedCF, score, rating, color };
+    return { v10, v50, v100, shearAlpha: alpha, wpd, windClassDesc, estimatedCF, source, crossCheck100m, score, rating, color };
 }
 
 function assessCSP(nasaData) {
@@ -86,37 +119,30 @@ function assessCSP(nasaData) {
     return { dniDaily, dniAnnual, suitability, score, color };
 }
 
-function assessGeothermal(lat, lon) {
-    let indicator = 'Very Low', score = 10, description = 'No known significant geothermal resources in this area.';
-    if (lat > 34 || (lat > 30 && lon < 10)) {
-        indicator = 'Low/Moderate'; score = 30; description = 'Potential for low-enthalpy direct use or binary cycle.';
-    }
-    return { indicator, score, description };
-}
-
 module.exports = {
     generateAssessment(apiData) {
         if (!apiData) return null;
         const { lat, lon, nasa, pvgis, meteo } = apiData;
 
         const solar = assessSolar(nasa, pvgis);
-        const wind = assessWind(meteo, nasa);
+        const wind = assessWind(nasa, meteo);
         const csp = assessCSP(nasa);
-        const geo = assessGeothermal(lat, lon);
 
         let overallScore = 0;
         if (solar && wind && csp) overallScore = (solar.score * 0.5) + (wind.score * 0.35) + (csp.score * 0.15);
+        else if (solar && csp) overallScore = (solar.score * 0.6) + (csp.score * 0.4);
+        else if (solar) overallScore = solar.score;
         overallScore = Math.round(overallScore);
 
         let recommendation = 'Solar PV';
-        if (wind && wind.score > solar.score + 10) recommendation = 'Wind Farm';
-        else if (wind && wind.score > 70 && solar.score > 70) recommendation = 'Hybrid Solar + Wind';
+        if (wind && solar && wind.score > solar.score + 10) recommendation = 'Wind Farm';
+        else if (wind && solar && wind.score > 70 && solar.score > 70) recommendation = 'Hybrid Solar + Wind';
         else if (csp && csp.score > 90) recommendation = 'Solar PV or CSP Tower';
 
         return {
             id: `${lat.toFixed(4)},${lon.toFixed(4)}`,
             lat, lon, elevation: meteo?.elevation || 'Unknown',
-            solar, wind, csp, geo, overallScore, recommendation,
+            solar, wind, csp, overallScore, recommendation,
             timestamp: Date.now()
         };
     }

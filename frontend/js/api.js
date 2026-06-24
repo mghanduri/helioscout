@@ -1,19 +1,16 @@
-window.RenewMap = window.RenewMap || {};
+window.HelioScout = window.HelioScout || {};
 
 /**
- * Data fetching layer for Renewable Energy Map Tool
- * Communicates with our Node.js backend hosted on Railway
+ * Data fetching layer for HelioScout.
+ * Talks to the Node.js backend; the URL is resolved by js/config.js
+ * (loaded first) so deployment is a single config change.
  */
-RenewMap.API = (function() {
+HelioScout.API = (function() {
     const cache = new Map();
     let currentAbortController = null;
 
-    // In production (Vercel), this will point to the Railway URL.
-    // In development, it points to localhost.
-    // Replace the production URL once Railway gives you the live URL.
-    const BACKEND_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
-        ? 'http://localhost:3000' 
-        : 'https://your-railway-app-name.up.railway.app'; // <--- Update this after deploying to Railway
+    // Resolved by js/config.js (?api= override -> injected -> localhost -> prod fallback)
+    const BACKEND_URL = (window.HELIOSCOUT_CONFIG && window.HELIOSCOUT_CONFIG.BACKEND_URL) || 'http://localhost:3000';
 
     const getCacheKey = (lat, lon) => `${lat.toFixed(2)},${lon.toFixed(2)}`;
 

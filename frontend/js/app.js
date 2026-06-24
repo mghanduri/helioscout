@@ -1,5 +1,5 @@
 /**
- * Main Application Orchestrator for RenewMap
+ * Main Application Orchestrator for HelioScout
  */
 document.addEventListener('DOMContentLoaded', async () => {
     
@@ -65,8 +65,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         metricDni: document.getElementById('metric-dni'),
         metricDniAnnual: document.getElementById('metric-dni-annual'),
         metricCspSuit: document.getElementById('metric-csp-suit'),
-        metricGeo: document.getElementById('metric-geo'),
-        metricGeoDesc: document.getElementById('metric-geo-desc'),
         cspScoreBar: document.getElementById('csp-score-bar'),
         cspScoreValue: document.getElementById('csp-score-value'),
         cspRating: document.getElementById('csp-rating'),
@@ -88,7 +86,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         finLcoe: document.getElementById('fin-lcoe'),
         finCo2: document.getElementById('fin-co2'),
         finPayback: document.getElementById('fin-payback'),
-        finNpv: document.getElementById('fin-npv')
+        finNpv: document.getElementById('fin-npv'),
+        finBasis: document.getElementById('fin-basis')
     };
 
     // State
@@ -100,27 +99,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     // 1. Initialize Map
-    RenewMap.Map.init('map');
+    HelioScout.Map.init('map');
     
     // Map Click Handler -> Trigger Assessment
-    RenewMap.Map.onMapClick((lat, lon) => {
+    HelioScout.Map.onMapClick((lat, lon) => {
         runAssessment(lat, lon);
     });
     
     // Update Coordinates Display on Mousemove
-    RenewMap.Map.getMap().on('mousemove', (e) => {
+    HelioScout.Map.getMap().on('mousemove', (e) => {
         els.coordLat.textContent = `${e.latlng.lat.toFixed(4)}°${e.latlng.lat >= 0 ? 'N' : 'S'}`;
         els.coordLon.textContent = `${e.latlng.lng.toFixed(4)}°${e.latlng.lng >= 0 ? 'E' : 'W'}`;
     });
 
     // Load Initial Data (Plants & Proposals)
     try {
-        await RenewMap.Proposals.loadData();
-        const plants = RenewMap.Proposals.getPlants();
-        const proposals = RenewMap.Proposals.getProposedSites('all');
+        await HelioScout.Proposals.loadData();
+        const plants = HelioScout.Proposals.getPlants();
+        const proposals = HelioScout.Proposals.getProposedSites('all');
         
-        RenewMap.Map.renderPlants(plants);
-        RenewMap.Map.renderProposedSites(proposals);
+        HelioScout.Map.renderPlants(plants);
+        HelioScout.Map.renderProposedSites(proposals);
         
         renderProposalsList(proposals);
         
@@ -150,13 +149,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Fetch Assessment Data from Backend
-        const assessment = await RenewMap.API.fetchAllData(lat, lon);
+        const assessment = await HelioScout.API.fetchAllData(lat, lon);
         if (!assessment) return; // Aborted or failed
         
         currentState.currentAssessment = assessment;
         
         // Update Map Marker
-        RenewMap.Map.placeMarker(lat, lon, assessment.overallScore);
+        HelioScout.Map.placeMarker(lat, lon, assessment.overallScore);
         
         // Reverse Geocode (Basic fallback for demo)
         fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`)
@@ -175,21 +174,50 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         // Calculate Financials if in Libya mode
         if (currentState.mode === 'libya') {
+            autoMapNearestPlant(lat, lon);
             updateFinancials();
         }
-        
+
         // Switch views
         els.loadingOverlay.classList.add('hidden');
         els.contentOverlay.classList.remove('hidden');
-        
+
+        // Update pin button state for this location
+        refreshPinButton();
+
         // Render Charts (default tab might be charts or we just prep them)
-        RenewMap.Charts.renderMonthlyChart('monthly-chart', assessment.solar.monthlyProfile, null);
-        RenewMap.Charts.renderRadarChart('radar-chart', assessment.radarData || {
+        HelioScout.Charts.renderMonthlyChart('monthly-chart', assessment.solar.monthlyProfile, null);
+        HelioScout.Charts.renderRadarChart('radar-chart', {
             solar: assessment.solar.score,
-            wind: assessment.wind.score,
-            csp: assessment.csp.score,
-            geo: assessment.geo.score
+            wind: assessment.wind ? assessment.wind.score : 0,
+            csp: assessment.csp.score
         });
+    }
+
+    /**
+     * Infer the displaced turbine + plant age from the nearest GECOL plant
+     * and pre-fill the financial controls. The user can still override.
+     */
+    function autoMapNearestPlant(lat, lon) {
+        const nearest = HelioScout.Proposals.getNearestPlant(lat, lon);
+        if (!nearest || !nearest.plant) {
+            if (els.finBasis) els.finBasis.textContent = '';
+            return;
+        }
+        const p = nearest.plant;
+        const turbineId = HelioScout.Financial.classConfigToTurbineId(p.turbineClass, p.config);
+        els.finTurbine.value = turbineId;
+
+        if (p.yearBuilt) {
+            const age = Math.max(0, new Date().getFullYear() - p.yearBuilt);
+            els.finAge.value = Math.min(age, parseInt(els.finAge.max, 10));
+            els.finAgeVal.textContent = `${els.finAge.value} yrs`;
+        }
+
+        if (els.finBasis) {
+            els.finBasis.textContent =
+                `Basis: nearest plant — ${p.name} (${p.config} ${p.turbineClass || ''}, built ${p.yearBuilt || 'n/a'}), ${nearest.distanceKm} km away.`;
+        }
     }
 
     function populateUI(data) {
@@ -247,9 +275,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         els.metricDni.textContent = data.csp.dniDaily.toFixed(2);
         els.metricDniAnnual.textContent = Math.round(data.csp.dniAnnual).toLocaleString();
         els.metricCspSuit.textContent = data.csp.suitability;
-        els.metricGeo.textContent = data.geo.indicator;
-        els.metricGeoDesc.textContent = data.geo.description;
-        
+
         els.cspScoreBar.style.width = `${data.csp.score}%`;
         els.cspScoreValue.textContent = data.csp.score;
         els.cspRating.textContent = data.csp.suitability;
@@ -269,21 +295,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         const expPrice = parseFloat(els.finExpPrice.value);
         
         // Calculate PV generation (using solar CF)
-        const pvLcoe = RenewMap.Financial.calculateLCOE('solar', capMW, a.solar.capacityFactor);
-        
+        const pvLcoe = HelioScout.Financial.calculateLCOE('solar', capMW, a.solar.capacityFactor);
+
+        // Derate at warm-season temperature (realistic operating ambient), not annual mean.
+        const deratingTemp = (a.solar.summerTemp != null) ? a.solar.summerTemp : a.solar.avgTemp;
+
         // Calculate Displacement
-        const disp = RenewMap.Financial.calculateGasDisplacement(
-            pvLcoe.annualMWh, 
-            turbineId, 
-            a.solar.avgTemp, 
-            ageYears, 
-            domPrice, 
+        const disp = HelioScout.Financial.calculateGasDisplacement(
+            pvLcoe.annualMWh,
+            turbineId,
+            deratingTemp,
+            ageYears,
+            domPrice,
             expPrice
         );
-        
+
         // Calculate NPV based on export revenue
-        const npv = RenewMap.Financial.calculateNPV(pvLcoe.totalCapex, disp.exportValue, pvLcoe.annualOpex, 25);
-        
+        const npv = HelioScout.Financial.calculateNPV(pvLcoe.totalCapex, disp.exportValue, pvLcoe.annualOpex, 25);
+
         // Populate UI
         els.finGasFreed.textContent = Math.round(disp.gasFreedMMBtu).toLocaleString();
         els.finExpValue.textContent = '$' + Math.round(disp.exportValue).toLocaleString();
@@ -291,12 +320,226 @@ document.addEventListener('DOMContentLoaded', async () => {
         els.finLcoe.textContent = pvLcoe.lcoe.toFixed(2);
         els.finCo2.textContent = Math.round(disp.co2AvoidedTonnes).toLocaleString();
         els.finPayback.textContent = npv.paybackYears ? npv.paybackYears.toFixed(1) : '>25';
-        
+
         // Format NPV
         const npvFormatted = (npv.npv / 1000000).toFixed(1);
         els.finNpv.textContent = npv.npv >= 0 ? `+$${npvFormatted}M` : `-$${Math.abs(npvFormatted)}M`;
         els.finNpv.style.color = npv.npv >= 0 ? 'var(--financial-500)' : 'var(--danger)';
+
+        // Cache a compact summary for the Compare feature
+        currentState.financialSummary = {
+            lcoeSolar: pvLcoe.lcoe,
+            gasDisplacement: disp.gasFreedMMBtu,   // MMBtu/yr
+            gasValue: disp.exportValue / 1e6,       // $M/yr (export-parity)
+            npv: npv.npv,
+            paybackYears: npv.paybackYears
+        };
     }
+
+    // ==========================================
+    // Site Comparison (pin / compare / export)
+    // ==========================================
+
+    /**
+     * Map the backend assessment shape onto the shape HelioScout.Compare expects.
+     */
+    function buildCompareRecord(assessment) {
+        const fin = currentState.financialSummary;
+        return {
+            id: `${assessment.lat.toFixed(4)}_${assessment.lon.toFixed(4)}`,
+            name: (els.locationName.textContent || 'Site').trim(),
+            lat: assessment.lat,
+            lon: assessment.lon,
+            solar: {
+                ghi: assessment.solar.ghi.annual,
+                pvOutput: assessment.solar.pvOutput,
+                score: assessment.solar.score
+            },
+            wind: assessment.wind ? {
+                speed100m: assessment.wind.v100,
+                capacityFactor: assessment.wind.estimatedCF,
+                score: assessment.wind.score
+            } : null,
+            csp: {
+                dni: assessment.csp.dniAnnual,
+                score: assessment.csp.score
+            },
+            composite: assessment.overallScore,
+            financial: (currentState.mode === 'libya' && fin) ? {
+                lcoeSolar: fin.lcoeSolar,
+                gasDisplacement: fin.gasDisplacement,
+                gasValue: fin.gasValue
+            } : null
+        };
+    }
+
+    const pinBtn = document.getElementById('pin-site-btn');
+    const compareBtn = document.getElementById('compare-btn');
+    const pinnedList = document.getElementById('pinned-list');
+    const pinnedCount = document.getElementById('pinned-count');
+    const comparisonModal = document.getElementById('comparison-modal');
+    const comparisonBody = document.getElementById('comparison-body');
+
+    function refreshPinButton() {
+        if (!currentState.currentAssessment) return;
+        const a = currentState.currentAssessment;
+        const pinned = HelioScout.Compare.isPinned(a.lat, a.lon);
+        pinBtn.classList.toggle('is-pinned', pinned);
+        pinBtn.title = pinned ? 'Unpin this site' : 'Pin this site for comparison';
+    }
+
+    function renderPinnedSidebar() {
+        const sites = HelioScout.Compare.getPinnedSites();
+        pinnedCount.textContent = sites.length;
+
+        if (sites.length === 0) {
+            pinnedList.innerHTML = '<div class="empty-state"><p>Click on the map to assess a location, then pin it for comparison.</p></div>';
+            compareBtn.classList.add('hidden');
+            return;
+        }
+
+        compareBtn.classList.toggle('hidden', sites.length < 2);
+        pinnedList.innerHTML = sites.map(function (s) {
+            return '<div class="pinned-item" data-site-id="' + s.id + '">' +
+                '<div class="pinned-item__info">' +
+                    '<span class="pinned-item__name">' + (s.name || s.id) + '</span>' +
+                    '<span class="pinned-item__score">Score ' + (s.composite != null ? s.composite : '—') + '</span>' +
+                '</div>' +
+                '<button class="pinned-item__remove" data-site-id="' + s.id + '" title="Remove">✕</button>' +
+            '</div>';
+        }).join('');
+
+        pinnedList.querySelectorAll('.pinned-item__remove').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                HelioScout.Compare.unpinSite(e.currentTarget.getAttribute('data-site-id'));
+                renderPinnedSidebar();
+                refreshPinButton();
+            });
+        });
+    }
+    HelioScout.Compare.onUpdate = renderPinnedSidebar;
+
+    pinBtn.addEventListener('click', () => {
+        if (!currentState.currentAssessment) return;
+        const record = buildCompareRecord(currentState.currentAssessment);
+        if (HelioScout.Compare.isPinned(record.lat, record.lon)) {
+            HelioScout.Compare.unpinSite(record.id);
+        } else {
+            if (!HelioScout.Compare.pinSite(record)) {
+                alert('Maximum of 5 sites can be pinned for comparison.');
+                return;
+            }
+        }
+        renderPinnedSidebar();
+        refreshPinButton();
+    });
+
+    function openComparison() {
+        comparisonBody.innerHTML = HelioScout.Compare.generateComparisonTable();
+        comparisonBody.querySelectorAll('.compare-table__unpin').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                HelioScout.Compare.unpinSite(e.currentTarget.getAttribute('data-site-id'));
+                renderPinnedSidebar();
+                refreshPinButton();
+                if (HelioScout.Compare.getPinnedSites().length === 0) closeComparison();
+                else openComparison();
+            });
+        });
+        comparisonModal.classList.remove('hidden');
+    }
+    function closeComparison() { comparisonModal.classList.add('hidden'); }
+
+    compareBtn.addEventListener('click', openComparison);
+    document.getElementById('modal-close').addEventListener('click', closeComparison);
+    document.getElementById('close-comparison-btn').addEventListener('click', closeComparison);
+    document.getElementById('export-comparison-btn').addEventListener('click', () => HelioScout.Compare.exportCSV());
+    comparisonModal.addEventListener('click', (e) => { if (e.target === comparisonModal) closeComparison(); });
+
+    // Single-site export (current assessment -> CSV)
+    document.getElementById('export-btn').addEventListener('click', () => {
+        if (!currentState.currentAssessment) return;
+        const rec = buildCompareRecord(currentState.currentAssessment);
+        const rows = [
+            ['Field', 'Value'],
+            ['Name', rec.name],
+            ['Latitude', rec.lat.toFixed(4)],
+            ['Longitude', rec.lon.toFixed(4)],
+            ['Overall Score', rec.composite],
+            ['Solar GHI (kWh/m2/day)', rec.solar.ghi.toFixed(2)],
+            ['PV Output (kWh/kWp/yr)', Math.round(rec.solar.pvOutput)],
+            ['Solar Score', rec.solar.score],
+            ['Wind Speed 100m (m/s)', rec.wind ? rec.wind.speed100m.toFixed(2) : 'n/a'],
+            ['Wind Score', rec.wind ? rec.wind.score : 'n/a'],
+            ['CSP DNI (kWh/m2/yr)', Math.round(rec.csp.dni)],
+            ['CSP Score', rec.csp.score]
+        ];
+        if (rec.financial) {
+            rows.push(['LCOE Solar ($/MWh)', rec.financial.lcoeSolar.toFixed(2)]);
+            rows.push(['Gas Freed (MMBtu/yr)', Math.round(rec.financial.gasDisplacement)]);
+            rows.push(['Gas Value Export ($M/yr)', rec.financial.gasValue.toFixed(2)]);
+        }
+        const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'helioscout-site-' + new Date().toISOString().slice(0, 10) + '.csv';
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(url); }, 100);
+    });
+
+    // ==========================================
+    // Fleet Validation (reconciliation)
+    // ==========================================
+
+    const fleetModal = document.getElementById('fleet-modal');
+    const fleetResults = document.getElementById('fleet-results');
+    const reconUtil = document.getElementById('recon-utilisation');
+    const reconUtilVal = document.getElementById('recon-utilisation-val');
+    const reconAmbient = document.getElementById('recon-ambient');
+    const reconAmbientVal = document.getElementById('recon-ambient-val');
+    const reconNational = document.getElementById('recon-national');
+    let lastReconResult = null;
+
+    function recomputeFleet() {
+        const plants = HelioScout.Proposals.getPlants();
+        if (!plants || plants.length === 0) {
+            fleetResults.innerHTML = '<p class="text-muted">Plant data not loaded.</p>';
+            return;
+        }
+        lastReconResult = HelioScout.Reconciliation.compute(plants, {
+            utilisation: parseFloat(reconUtil.value) / 100,
+            ambientC: parseFloat(reconAmbient.value),
+            nationalBcf: parseFloat(reconNational.value)
+        });
+        fleetResults.innerHTML = HelioScout.Reconciliation.generateHTML(lastReconResult);
+    }
+
+    function openFleet() { recomputeFleet(); fleetModal.classList.remove('hidden'); }
+    function closeFleet() { fleetModal.classList.add('hidden'); }
+
+    document.getElementById('fleet-validation-btn').addEventListener('click', openFleet);
+    document.getElementById('fleet-modal-close').addEventListener('click', closeFleet);
+    document.getElementById('fleet-close-btn').addEventListener('click', closeFleet);
+    fleetModal.addEventListener('click', (e) => { if (e.target === fleetModal) closeFleet(); });
+
+    reconUtil.addEventListener('input', () => { reconUtilVal.textContent = reconUtil.value + '%'; recomputeFleet(); });
+    reconAmbient.addEventListener('input', () => { reconAmbientVal.textContent = reconAmbient.value; recomputeFleet(); });
+    reconNational.addEventListener('input', recomputeFleet);
+
+    document.getElementById('fleet-export-btn').addEventListener('click', () => {
+        if (!lastReconResult) return;
+        const csv = HelioScout.Reconciliation.toCSV(lastReconResult);
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'helioscout-fleet-reconciliation-' + new Date().toISOString().slice(0, 10) + '.csv';
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => { document.body.removeChild(link); URL.revokeObjectURL(url); }, 100);
+    });
 
     // ==========================================
     // Event Listeners
@@ -317,20 +560,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             els.modeBtn.classList.add('active');
             els.modeUnivBtn.classList.remove('active');
             document.getElementById('financial-tab-btn').classList.remove('hidden');
-            RenewMap.Map.toggleLayer('plants', true);
-            RenewMap.Map.toggleLayer('proposed', true);
+            document.getElementById('fleet-validation-section').classList.remove('hidden');
+            HelioScout.Map.toggleLayer('plants', true);
+            HelioScout.Map.toggleLayer('proposed', true);
             document.getElementById('toggle-plants').querySelector('input').checked = true;
             document.getElementById('toggle-proposed').querySelector('input').checked = true;
         } else {
             els.modeBtn.classList.remove('active');
             els.modeUnivBtn.classList.add('active');
             document.getElementById('financial-tab-btn').classList.add('hidden');
+            document.getElementById('fleet-validation-section').classList.add('hidden');
             // If on financial tab, switch to solar
             if (document.getElementById('tab-financial').classList.contains('active')) {
                 els.tabBtns[0].click();
             }
-            RenewMap.Map.toggleLayer('plants', false);
-            RenewMap.Map.toggleLayer('proposed', false);
+            HelioScout.Map.toggleLayer('plants', false);
+            HelioScout.Map.toggleLayer('proposed', false);
             document.getElementById('toggle-plants').querySelector('input').checked = false;
             document.getElementById('toggle-proposed').querySelector('input').checked = false;
         }
@@ -357,9 +602,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const checked = e.target.checked;
             
             if (layer === 'satellite') {
-                RenewMap.Map.setBaseLayer(checked ? 'satellite' : 'dark');
+                HelioScout.Map.setBaseLayer(checked ? 'satellite' : 'dark');
             } else {
-                RenewMap.Map.toggleLayer(layer, checked);
+                HelioScout.Map.toggleLayer(layer, checked);
             }
         });
     });
@@ -386,7 +631,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
             e.currentTarget.classList.add('active');
             const type = e.currentTarget.getAttribute('data-filter');
-            const filtered = RenewMap.Proposals.getProposedSites(type === 'all' ? null : type);
+            const filtered = HelioScout.Proposals.getProposedSites(type === 'all' ? null : type);
             renderProposalsList(filtered);
         });
     });
@@ -395,7 +640,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const list = document.getElementById('proposals-list');
         list.innerHTML = '';
         sites.forEach(site => {
-            list.innerHTML += RenewMap.Proposals.generateSiteCard(site);
+            list.innerHTML += HelioScout.Proposals.generateSiteCard(site);
         });
         
         // Bind assess buttons
@@ -403,7 +648,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             btn.addEventListener('click', (e) => {
                 const lat = parseFloat(e.currentTarget.getAttribute('data-lat'));
                 const lon = parseFloat(e.currentTarget.getAttribute('data-lon'));
-                RenewMap.Map.flyTo(lat, lon, 10);
+                HelioScout.Map.flyTo(lat, lon, 10);
                 setTimeout(() => runAssessment(lat, lon), 1500); // Wait for flight
             });
         });
@@ -412,7 +657,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Global listener for markers clicking "Assess Location"
     document.addEventListener('assess-proposal', (e) => {
         const { lat, lon } = e.detail;
-        map.closePopup();
+        HelioScout.Map.getMap().closePopup();
         runAssessment(lat, lon);
     });
 
@@ -443,7 +688,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 els.searchInput.value = item.display_name.split(',')[0];
                                 const lat = parseFloat(item.lat);
                                 const lon = parseFloat(item.lon);
-                                RenewMap.Map.flyTo(lat, lon, 10);
+                                HelioScout.Map.flyTo(lat, lon, 10);
                                 setTimeout(() => runAssessment(lat, lon), 1500);
                             });
                             els.searchResults.appendChild(div);

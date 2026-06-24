@@ -1,5 +1,5 @@
 /* ============================================================
-   RenewMap — Premium Dark Mode Design System
+   HelioScout — Premium Dark Mode Design System
    ============================================================ */
 
 /* ---------- Design Tokens ---------- */
@@ -1142,3 +1142,103 @@ input[type="range"]::-webkit-slider-thumb:hover { box-shadow: 0 0 0 6px var(--fi
     #coordinates-display { display: none; }
     .metric-grid { grid-template-columns: 1fr; }
 }
+
+/* ============================================
+   Comparison table (compare.js modal)
+   ============================================ */
+.compare-table-wrap { overflow-x: auto; }
+.compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+.compare-table th,
+.compare-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--glass-border);
+    white-space: nowrap;
+}
+.compare-table__label { color: var(--text-muted); font-weight: 500; }
+.compare-table__site { vertical-align: top; }
+.compare-table__site-name { display: block; color: var(--text-primary); font-weight: 600; }
+.compare-table__coords { display: block; color: var(--text-muted); font-size: 11px; }
+.compare-table__unpin {
+    margin-top: 4px; background: none; border: none; color: var(--danger);
+    cursor: pointer; font-size: 12px; padding: 0;
+}
+.compare-table__value { color: var(--text-primary); }
+.compare-table__value.score--excellent { color: var(--financial-500); font-weight: 600; }
+.compare-table__value.score--good { color: var(--solar-400); font-weight: 600; }
+.compare-table__value.score--moderate { color: var(--wind-400); }
+.compare-table__value.score--poor { color: var(--text-muted); }
+.compare-empty { text-align: center; color: var(--text-muted); padding: 32px 16px; }
+.compare-empty__hint { font-size: 12px; margin-top: 8px; }
+.compare-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; }
+.compare-actions__export,
+.compare-actions__clear {
+    padding: 8px 14px; border-radius: var(--radius-sm);
+    border: 1px solid var(--glass-border); background: var(--bg-elevated);
+    color: var(--text-secondary); cursor: pointer; font-size: 13px;
+}
+.compare-actions__export:hover { color: var(--financial-500); border-color: var(--financial-500); }
+.compare-actions__clear:hover { color: var(--danger); border-color: var(--danger); }
+
+/* Pin button active state */
+#pin-site-btn.is-pinned {
+    background: var(--financial-glow);
+    border-color: var(--financial-500);
+    color: var(--financial-500);
+}
+
+/* Financial basis line */
+.fin-basis {
+    font-size: 11px;
+    margin-top: 6px;
+    padding: 6px 8px;
+    border-left: 2px solid var(--financial-500);
+    background: var(--financial-glow);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+.fin-basis:empty { display: none; }
+
+/* ============================================
+   Fleet validation (reconciliation.js)
+   ============================================ */
+#fleet-validation-btn { margin-top: 8px; }
+.recon-controls {
+    display: grid; gap: 14px; margin-bottom: 20px;
+    padding: 14px; background: var(--bg-surface);
+    border: 1px solid var(--glass-border); border-radius: var(--radius-md);
+}
+.recon-controls label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+.recon-controls input[type="range"] { width: 100%; }
+.recon-controls input[type="number"] {
+    width: 100%; padding: 6px 8px; background: var(--bg-elevated);
+    border: 1px solid var(--glass-border); border-radius: var(--radius-sm);
+    color: var(--text-primary);
+}
+.recon-verdict {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; margin-bottom: 18px;
+    border-radius: var(--radius-md); border: 1px solid var(--glass-border);
+    background: var(--bg-surface);
+}
+.recon-verdict__ratio { font-size: 26px; font-weight: 700; }
+.recon-verdict.is-validated { border-color: var(--financial-500); }
+.recon-verdict.is-validated .recon-verdict__ratio { color: var(--financial-500); }
+.recon-verdict.is-off { border-color: var(--warning); }
+.recon-verdict.is-off .recon-verdict__ratio { color: var(--warning); }
+.recon-verdict__text { font-size: 13px; color: var(--text-secondary); }
+.recon-summary { display: flex; gap: 24px; margin-bottom: 18px; flex-wrap: wrap; }
+.recon-summary__item .label { display: block; font-size: 11px; color: var(--text-muted); }
+.recon-summary__item .value { display: block; font-size: 18px; font-weight: 600; color: var(--text-primary); }
+.recon-table { width: 100%; border-collapse: collapse; font-size: 12px; color: var(--text-secondary); }
+.recon-table th, .recon-table td {
+    padding: 6px 10px; text-align: right; border-bottom: 1px solid var(--glass-border);
+}
+.recon-table th:first-child, .recon-table td:first-child { text-align: left; }
+.recon-table th { color: var(--text-muted); font-weight: 500; }
+.recon-table td.plant-name { color: var(--text-primary); }
+.recon-note { font-size: 11px; color: var(--text-muted); margin-top: 12px; font-style: italic; }
