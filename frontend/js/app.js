@@ -87,7 +87,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         finCo2: document.getElementById('fin-co2'),
         finPayback: document.getElementById('fin-payback'),
         finNpv: document.getElementById('fin-npv'),
-        finBasis: document.getElementById('fin-basis')
+        finNpvRange: document.getElementById('fin-npv-range'),
+        finBasis: document.getElementById('fin-basis'),
+        provenanceBody: document.getElementById('provenance-body')
     };
 
     // State
@@ -97,6 +99,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         currentLon: null,
         currentAssessment: null
     };
+
+    // 0. Load the assumptions register before anything can trigger a financial
+    //    or reconciliation calculation (those engines read it at call time).
+    try {
+        await HelioScout.loadAssumptions();
+    } catch (e) {
+        console.error('Failed to load assumptions register:', e);
+        alert('Could not load the assumptions register (data/assumptions.json). Financial figures will be unavailable until this loads.');
+    }
 
     // 1. Initialize Map
     HelioScout.Map.init('map');
@@ -158,15 +169,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Update Map Marker
         HelioScout.Map.placeMarker(lat, lon, assessment.overallScore);
         
-        // Reverse Geocode (Basic fallback for demo)
-        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10`)
-            .then(res => res.json())
-            .then(data => {
-                els.locationName.textContent = data.name || data.address?.city || data.address?.town || data.address?.state || "Unknown Location";
-            })
-            .catch(() => {
-                els.locationName.textContent = "Assessed Location";
-            });
+        // Reverse geocode via the backend proxy. Show an honest, coordinate-based
+        // label when the location can't be resolved rather than a fabricated name.
+        els.locationName.textContent = 'Resolving location…';
+        HelioScout.API.reverseGeocode(lat, lon).then(name => {
+            els.locationName.textContent = name || `Unnamed location (${lat.toFixed(3)}°, ${lon.toFixed(3)}°)`;
+        });
             
         els.assessmentCoords.textContent = `${lat.toFixed(4)}°, ${lon.toFixed(4)}°`;
         
@@ -221,6 +229,51 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    // Status dot label for a per-source availability state.
+    function statusLabel(status) {
+        if (status === 'ok') return '<span class="prov-status prov-ok">● live</span>';
+        if (status === 'unavailable') return '<span class="prov-status prov-bad">● unavailable</span>';
+        return `<span class="prov-status">● ${status || '—'}</span>`;
+    }
+
+    // Render the "Data sources & assumptions" panel from the backend provenance
+    // block so every figure is traceable to a named dataset, version and as-of date.
+    function renderProvenance(data) {
+        if (!els.provenanceBody) return;
+        const p = data.provenance;
+        if (!p) { els.provenanceBody.innerHTML = '<p class="text-muted">Provenance unavailable.</p>'; return; }
+
+        const a = HelioScout.Assumptions;
+        const ds = p.datasets || {};
+        const retrieved = p.retrievedAt ? new Date(p.retrievedAt).toLocaleString() : '—';
+
+        const nameVer = (o) => o ? [o.name, o.version, o.dataset].filter(Boolean).join(' · ') : '—';
+
+        let html = '';
+        html += '<dl class="prov-list">';
+        html += `<dt>Solar resource</dt><dd>${nameVer(ds.solar && ds.solar.resource)} ${statusLabel(p.status && p.status.nasa)}</dd>`;
+        html += `<dt>PV yield</dt><dd>${nameVer(ds.solar && ds.solar.pvYield)} ${statusLabel(p.status && p.status.pvgis)}</dd>`;
+        html += `<dt>Wind</dt><dd>${nameVer(ds.wind && ds.wind.resource)} ${statusLabel(p.status && p.status.meteo)}</dd>`;
+        html += `<dt>CSP (DNI)</dt><dd>${nameVer(ds.csp && ds.csp.resource)}</dd>`;
+        html += `<dt>Assumptions register</dt><dd>v${p.assumptionsVersion || '—'} (updated ${p.assumptionsUpdated || '—'})</dd>`;
+        html += `<dt>Retrieved</dt><dd>${retrieved}</dd>`;
+        html += '</dl>';
+
+        // Threshold bases (1.4) — why the score bands are what they are.
+        const basis = p.thresholdBasis || (a && a.scoring && a.scoring._basis);
+        if (basis) {
+            html += '<div class="prov-basis"><strong>Scoring threshold basis</strong><ul>';
+            if (basis.solarGHIBands) html += `<li><em>Solar GHI bands:</em> ${basis.solarGHIBands}</li>`;
+            if (basis.windV100Bands) html += `<li><em>Wind classes:</em> ${basis.windV100Bands}</li>`;
+            if (basis.cspDNIBands) html += `<li><em>CSP DNI bands:</em> ${basis.cspDNIBands}</li>`;
+            html += '</ul></div>';
+        }
+
+        html += '<p class="prov-note text-muted">Financial figures derive from the dated assumptions register. Values marked “UNSOURCED” there are unverified and must be confirmed by the assumptions owner before official use.</p>';
+
+        els.provenanceBody.innerHTML = html;
+    }
+
     function populateUI(data) {
         // Overall
         const scoreCircle = Math.round(327 - (327 * data.overallScore / 100)); // 327 is approx dasharray for r=52
@@ -235,7 +288,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Animate counter (simplified)
         els.scoreRingValue.textContent = data.overallScore;
         els.recText.textContent = `Recommended: ${data.recommendation}`;
-        
+
+        // Provenance / data sources panel
+        renderProvenance(data);
+
         // Solar Tab
         els.metricGhi.textContent = data.solar.ghi.annual.toFixed(2);
         els.metricPvOut.textContent = data.solar.pvOutput ? data.solar.pvOutput.toFixed(0) : 'N/A';
@@ -326,6 +382,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         const npvFormatted = (npv.npv / 1000000).toFixed(1);
         els.finNpv.textContent = npv.npv >= 0 ? `+$${npvFormatted}M` : `-$${Math.abs(npvFormatted)}M`;
         els.finNpv.style.color = npv.npv >= 0 ? 'var(--financial-500)' : 'var(--danger)';
+
+        // NPV sensitivity to export gas price (low / expected / high) — a range,
+        // not a single point, since gas price is the dominant driver.
+        if (els.finNpvRange) {
+            const sens = HelioScout.Financial.calculateNPVSensitivity({
+                capex: pvLcoe.totalCapex,
+                annualOpex: pvLcoe.annualOpex,
+                gasFreedMMBtu: disp.gasFreedMMBtu,
+                exportPrice: expPrice,
+                lifeYears: 25
+            });
+            const m = (v) => (v >= 0 ? '+$' : '−$') + Math.abs(v / 1e6).toFixed(1) + 'M';
+            const pctLabel = Math.round(sens.pct * 100);
+            els.finNpvRange.textContent =
+                `Range (export price ±${pctLabel}%): ${m(sens.low)} … ${m(sens.high)}`;
+        }
 
         // Cache a compact summary for the Compare feature
         currentState.financialSummary = {
@@ -662,7 +734,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         runAssessment(lat, lon);
     });
 
-    // Geocoding Search (Basic implementation)
+    // Geocoding search via the backend proxy (Nominatim called server-side).
     let searchTimeout;
     els.searchInput.addEventListener('input', (e) => {
         clearTimeout(searchTimeout);
@@ -671,32 +743,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             els.searchResults.classList.add('hidden');
             return;
         }
-        
+
         searchTimeout = setTimeout(() => {
-            fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5`)
-                .then(res => res.json())
-                .then(data => {
-                    els.searchResults.innerHTML = '';
-                    if (data.length === 0) {
-                        els.searchResults.innerHTML = '<div class="search-result-item text-muted">No results found</div>';
-                    } else {
-                        data.forEach(item => {
-                            const div = document.createElement('div');
-                            div.className = 'search-result-item';
-                            div.textContent = item.display_name;
-                            div.addEventListener('click', () => {
-                                els.searchResults.classList.add('hidden');
-                                els.searchInput.value = item.display_name.split(',')[0];
-                                const lat = parseFloat(item.lat);
-                                const lon = parseFloat(item.lon);
-                                HelioScout.Map.flyTo(lat, lon, 10);
-                                setTimeout(() => runAssessment(lat, lon), 1500);
-                            });
-                            els.searchResults.appendChild(div);
+            HelioScout.API.searchPlace(query).then(results => {
+                els.searchResults.innerHTML = '';
+                if (!results.length) {
+                    els.searchResults.innerHTML = '<div class="search-result-item text-muted">No results found</div>';
+                } else {
+                    results.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'search-result-item';
+                        div.textContent = item.displayName;
+                        div.addEventListener('click', () => {
+                            els.searchResults.classList.add('hidden');
+                            els.searchInput.value = item.displayName.split(',')[0];
+                            HelioScout.Map.flyTo(item.lat, item.lon, 10);
+                            setTimeout(() => runAssessment(item.lat, item.lon), 1500);
                         });
-                    }
-                    els.searchResults.classList.remove('hidden');
-                });
+                        els.searchResults.appendChild(div);
+                    });
+                }
+                els.searchResults.classList.remove('hidden');
+            });
         }, 500);
     });
     

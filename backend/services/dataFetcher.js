@@ -60,7 +60,16 @@ function calculateMean(arr) {
     return sum / valid.length;
 }
 
+// Dataset versions / identifiers surfaced to the frontend provenance panel so
+// every number is traceable to a named dataset and version.
+const DATASET_META = {
+    nasa: { name: 'NASA POWER', dataset: 'Climatology (multi-decade monthly normals)', endpoint: 'temporal/climatology/point' },
+    pvgis: { name: 'EU PVGIS', dataset: 'PVcalc (fixed mount)', version: 'v5.3' },
+    meteo: { name: 'Open-Meteo', dataset: 'Forecast (14-day hourly wind)', role: 'cross-check / elevation' }
+};
+
 module.exports = {
+    DATASET_META,
     async fetchAllData(lat, lon) {
         const [nasa, pvgis, meteo] = await Promise.all([
             fetchNASAPowerData(lat, lon),
@@ -68,6 +77,6 @@ module.exports = {
             fetchOpenMeteoWind(lat, lon)
         ]);
 
-        return { lat, lon, nasa, pvgis, meteo, timestamp: Date.now() };
+        return { lat, lon, nasa, pvgis, meteo, meta: DATASET_META, timestamp: Date.now() };
     }
 };

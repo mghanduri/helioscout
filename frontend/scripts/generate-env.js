@@ -23,3 +23,15 @@ const outPath = path.join(__dirname, '..', 'js', 'env.js');
 fs.writeFileSync(outPath, contents);
 
 console.log('[generate-env] wrote js/env.js with BACKEND_URL =', backendUrl || '(empty — frontend will fall back to localhost)');
+
+// Copy the canonical assumptions register into data/ so the browser can fetch it.
+// Mirrors the env.js pattern: a build artifact derived from the single root file.
+const assumptionsSrc = path.join(__dirname, '..', '..', 'assumptions.json');
+const assumptionsDest = path.join(__dirname, '..', 'data', 'assumptions.json');
+try {
+  fs.copyFileSync(assumptionsSrc, assumptionsDest);
+  console.log('[generate-env] copied assumptions.json ->', path.relative(path.join(__dirname, '..'), assumptionsDest));
+} catch (e) {
+  console.warn('[generate-env] could not copy assumptions.json:', e.message,
+    '\n[generate-env] the committed data/assumptions.json copy will be used instead.');
+}

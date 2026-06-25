@@ -4,7 +4,9 @@
   "description": "HelioScout backend — renewable resource assessment + gas-displacement API",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node test/regression.test.js",
+    "postinstall": "node scripts/sync-assumptions.js",
+    "prestart": "node scripts/sync-assumptions.js",
     "start": "node server.js"
   },
   "keywords": [],

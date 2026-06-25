@@ -1,0 +1,130 @@
+{
+  "meta": {
+    "version": "1.0.0",
+    "updated": "2026-06-25",
+    "owner": "UNASSIGNED — name a person/role responsible for keeping these current (Phase 0, assumptions ownership)",
+    "description": "Single source of truth for HelioScout scoring thresholds and financial assumptions. The backend scoring engine and the frontend financial/reconciliation engines both read from this file. Update values, sources and asOf dates HERE only — the per-deploy copies (backend/assumptions.json, frontend/data/assumptions.json) are generated from this file. Any value whose source reads 'UNSOURCED' has not been independently verified and must be confirmed by the assumptions owner before official use."
+  },
+
+  "scoring": {
+    "solarGHIBands": [
+      { "min": 6.5, "score": 95, "rating": "Exceptional", "color": "#f59e0b" },
+      { "min": 5.5, "score": 85, "rating": "Excellent",   "color": "#fbbf24" },
+      { "min": 4.5, "score": 70, "rating": "Very Good",   "color": "#fcd34d" },
+      { "min": 3.5, "score": 55, "rating": "Good",        "color": "#10b981" },
+      { "min": 2.5, "score": 40, "rating": "Moderate",    "color": "#3b82f6" },
+      { "min": null, "score": 20, "rating": "Poor",       "color": "#64748b" }
+    ],
+    "windV100Bands": [
+      { "min": 8.5, "score": 95, "rating": "Exceptional", "iec": "IEC Class I (High Wind)",        "color": "#0284c7" },
+      { "min": 7.5, "score": 85, "rating": "Excellent",   "iec": "IEC Class II (Medium Wind)",     "color": "#06b6d4" },
+      { "min": 6.0, "score": 70, "rating": "Very Good",   "iec": "IEC Class III (Low Wind)",       "color": "#22d3ee" },
+      { "min": 5.0, "score": 50, "rating": "Moderate",    "iec": "IEC Class IV (Very Low Wind)",   "color": "#67e8f9" },
+      { "min": null, "score": 25, "rating": "Poor",       "iec": "Below commercial threshold",     "color": "#64748b" }
+    ],
+    "cspDNIBands": [
+      { "min": 2500, "score": 95, "suitability": "Excellent for CSP Tower/Trough", "color": "#f97316" },
+      { "min": 2000, "score": 75, "suitability": "Good for CSP",                    "color": "#fb923c" },
+      { "min": 1800, "score": 50, "suitability": "Marginal (borderline viable)",    "color": "#fdba74" },
+      { "min": null, "score": 20, "suitability": "Not recommended (DNI too low)",   "color": "#64748b" }
+    ],
+    "tempImpact": {
+      "moderateC": 25,
+      "highC": 28,
+      "penalty": 5
+    },
+    "overallWeights":       { "solar": 0.5, "wind": 0.35, "csp": 0.15 },
+    "overallWeightsNoWind": { "solar": 0.6, "csp": 0.4 },
+    "recommendation": {
+      "windMarginOverSolar": 10,
+      "hybridMinScore": 70,
+      "cspExcellentMin": 90
+    },
+    "pvFallbackEfficiency": 0.75,
+    "shear": { "default": 0.143, "min": 0.10, "max": 0.40 },
+    "_basis": {
+      "solarGHIBands": "GHI bands for utility-scale PV siting. Libya's high-resource zones exceed 6 kWh/m²/day GHI (Global Solar Atlas / NASA POWER). Band cut-offs are a project convention calibrated to that resource range; treat as a siting heuristic, not a standard.",
+      "windV100Bands": "Hub-height (100 m) mean wind speed mapped to IEC 61400-1 wind turbine classes (Class I ~10 m/s ref, down to Class IV). ~6 m/s is the commonly cited floor for commercial onshore viability.",
+      "cspDNIBands": "Annual DNI viability bands for CSP. ~2000 kWh/m²/yr is the widely cited minimum for bankable CSP and ~2500+ kWh/m²/yr is considered excellent (IRENA / NREL / SolarPACES CSP resource guidance).",
+      "tempImpact": "Heuristic PV performance derate flags for warm climates (module efficiency falls with cell temperature). Indicative only.",
+      "shear": "Default 1/7 power-law exponent (α=0.143) for open terrain; clamped to 0.10–0.40 when derived from the NASA 10 m→50 m ratio."
+    }
+  },
+
+  "financial": {
+    "discountRate": {
+      "value": 0.08,
+      "source": "UNSOURCED — assumed real discount rate / WACC. Owner to confirm an appropriate rate for Libyan public-sector renewable investment.",
+      "asOf": "2026-06-25"
+    },
+    "tech": {
+      "solar": {
+        "capexPerKW": 700, "opexPerKWYr": 10, "lifeYears": 25,
+        "source": "Indicative utility-scale PV cost (order-of-magnitude, IRENA Renewable Power Generation Costs / NREL ATB range). Owner to confirm for Libya.",
+        "asOf": "2026-06-25"
+      },
+      "wind": {
+        "capexPerKW": 1300, "opexPerKWYr": 35, "lifeYears": 25,
+        "source": "Indicative onshore wind cost (IRENA / NREL ATB range). Owner to confirm for Libya.",
+        "asOf": "2026-06-25"
+      },
+      "csp": {
+        "capexPerKW": 3500, "opexPerKWYr": 50, "lifeYears": 30,
+        "source": "Indicative CSP (tower/trough) cost (IRENA / NREL ATB range). Owner to confirm for Libya.",
+        "asOf": "2026-06-25"
+      }
+    },
+    "co2FactorKgPerMMBtu": {
+      "value": 53.07,
+      "source": "US EPA GHG Emission Factors Hub — natural gas combustion (~53.06 kg CO2 / MMBtu, HHV).",
+      "asOf": "2026-06-25"
+    },
+    "derating": {
+      "isoBaselineC": 15,
+      "ambientPctPerC": 0.0035,
+      "ageEarlyYears": 10,
+      "ageEarlyPctPerYr": 0.003,
+      "ageLatePctPerYr": 0.005,
+      "ageCap": 0.15,
+      "source": "Engineering convention for gas-turbine heat-rate derating: ~0.35%/°C above 15°C ISO ambient; ~0.3%/yr vintage degradation for the first 10 years then ~0.5%/yr, capped at 15%. Indicative — owner to confirm against fleet data.",
+      "asOf": "2026-06-25"
+    },
+    "turbines": [
+      { "id": "ge-9e",                "name": "GE Frame 9E",        "manufacturer": "GE",      "class": "E-class", "config": "OCGT", "isoHeatRate": 10800, "efficiencyISO": 0.316, "typicalCapacityMW": 125 },
+      { "id": "ge-9f",                "name": "GE Frame 9F",        "manufacturer": "GE",      "class": "F-class", "config": "OCGT", "isoHeatRate": 9720,  "efficiencyISO": 0.351, "typicalCapacityMW": 255 },
+      { "id": "siemens-sgt5-2000e",   "name": "Siemens SGT5-2000E", "manufacturer": "Siemens", "class": "E-class", "config": "OCGT", "isoHeatRate": 10200, "efficiencyISO": 0.335, "typicalCapacityMW": 187 },
+      { "id": "siemens-sgt5-4000f",   "name": "Siemens SGT5-4000F", "manufacturer": "Siemens", "class": "F-class", "config": "OCGT", "isoHeatRate": 9500,  "efficiencyISO": 0.359, "typicalCapacityMW": 292 },
+      { "id": "ccgt-eclass",          "name": "CCGT (E-class)",     "manufacturer": "Various", "class": "E-class", "config": "CCGT", "isoHeatRate": 7200,  "efficiencyISO": 0.474, "typicalCapacityMW": 375 },
+      { "id": "ccgt-fclass",          "name": "CCGT (F-class)",     "manufacturer": "Various", "class": "F-class", "config": "CCGT", "isoHeatRate": 6800,  "efficiencyISO": 0.502, "typicalCapacityMW": 580 },
+      { "id": "generic-ocgt",         "name": "Generic OCGT (older)","manufacturer": "Various","class": "Legacy",  "config": "OCGT", "isoHeatRate": 11500, "efficiencyISO": 0.296, "typicalCapacityMW": 100 }
+    ],
+    "_turbinesSource": "Manufacturer ISO-condition heat rates / efficiencies (indicative, public datasheets). Representative of North-African gas fleets. Owner/GECOL to validate the class→turbine mapping (Phase 4 / W7).",
+    "gasPrices": {
+      "domestic": {
+        "default": 1.0, "min": 0.5, "max": 5.0,
+        "source": "UNSOURCED — administered/subsidised domestic gas price (USD/MMBtu). Owner to confirm current figure and as-of date.",
+        "asOf": "2026-06-25"
+      },
+      "export": {
+        "default": 10.0, "min": 4.0, "max": 20.0,
+        "source": "UNSOURCED — export-parity gas price (USD/MMBtu). This is the figure NOC will scrutinise hardest; owner to set a current, dated, sourced value.",
+        "asOf": "2026-06-25"
+      },
+      "sensitivityPct": 0.25,
+      "_sensitivityBasis": "Fractional band applied to the chosen export gas price to produce a low/expected/high NPV range (±25%). Government investment decisions need ranges, not point estimates; gas price is the dominant NPV driver."
+    }
+  },
+
+  "reconciliation": {
+    "mmbtuPerBcf": 1037000,
+    "nationalBcf": {
+      "value": 320,
+      "source": "Order-of-magnitude anchor from EIA Libya country analysis / Statistical Review of World Energy: Libyan power generation is ~99% gas-fired and gas consumption is dominated by the power sector. Tunable reference, not a precise published line item.",
+      "asOf": "2026-06-25"
+    },
+    "defaultAmbientC": 35,
+    "utilisation": 0.45,
+    "validationBand": { "low": 0.75, "high": 1.25 },
+    "_basis": "Bottom-up fleet gas estimate (per-plant derated heat rate × capacity × 8760 h × utilisation) is reconciled against nationalBcf. Validated when the ratio falls within validationBand (±25%). Natural-gas energy content ~1,037 Btu/cf (HHV) → 1 Bcf ≈ 1,037,000 MMBtu."
+  }
+}

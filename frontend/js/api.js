@@ -49,26 +49,30 @@ HelioScout.API = (function() {
             document.getElementById('assessment-panel').classList.remove('hidden');
 
             try {
-                // We fake the individual loading indicators for UX since the backend does it all in one go
+                // The backend fetches all sources in one request; we can't observe
+                // them individually mid-flight, so show all three as in-flight.
                 updateLoadingSource('nasa', 'loading');
                 updateLoadingSource('pvgis', 'loading');
                 updateLoadingSource('meteo', 'loading');
 
                 const response = await fetch(`${BACKEND_URL}/api/assess?lat=${lat}&lon=${lon}`, { signal });
-                
+
                 if (!response.ok) {
                     throw new Error(`Backend error: ${response.status}`);
                 }
 
                 const assessment = await response.json();
 
-                updateLoadingSource('nasa', 'loaded');
-                updateLoadingSource('pvgis', 'loaded');
-                updateLoadingSource('meteo', 'loaded');
+                // Reflect the REAL per-source status the backend reports in
+                // provenance.status. 'ok' -> loaded; unavailable -> error.
+                const status = (assessment.provenance && assessment.provenance.status) || {};
+                ['nasa', 'pvgis', 'meteo'].forEach(src => {
+                    updateLoadingSource(src, status[src] === 'ok' ? 'loaded' : 'error');
+                });
 
                 // Store in cache
                 cache.set(cacheKey, assessment);
-                
+
                 return assessment;
             } catch (error) {
                 if (error.name === 'AbortError') {
@@ -82,6 +86,36 @@ HelioScout.API = (function() {
                 console.error('Failed to fetch from backend:', error);
                 alert('Could not fetch assessment data from the backend. Make sure the Railway server is running.');
                 throw error;
+            }
+        },
+
+        /**
+         * Reverse geocode a coordinate via the backend proxy (Nominatim is
+         * called server-side with proper attribution). Returns a place name or
+         * null when unresolved — callers must label null honestly.
+         */
+        async reverseGeocode(lat, lon) {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/geocode/reverse?lat=${lat}&lon=${lon}`);
+                if (!res.ok) return null;
+                const data = await res.json();
+                return data.name || null;
+            } catch (e) {
+                console.warn('Reverse geocode failed:', e);
+                return null;
+            }
+        },
+
+        /** Forward geocode (search) via the backend proxy. Returns an array of results. */
+        async searchPlace(query) {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/geocode/search?q=${encodeURIComponent(query)}`);
+                if (!res.ok) return [];
+                const data = await res.json();
+                return data.results || [];
+            } catch (e) {
+                console.warn('Geocode search failed:', e);
+                return [];
             }
         },
 

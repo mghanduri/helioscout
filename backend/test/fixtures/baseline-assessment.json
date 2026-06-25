@@ -1,0 +1,272 @@
+{
+  "32,15": {
+    "id": "32.0000,15.0000",
+    "lat": 32,
+    "lon": 15,
+    "elevation": 34,
+    "solar": {
+      "ghi": {
+        "annual": 5.1127,
+        "monthly": [
+          2.9378,
+          3.7896,
+          4.9606,
+          6.0314,
+          6.8122,
+          7.3102,
+          7.3884,
+          6.7241,
+          5.4427,
+          4.1731,
+          3.1522,
+          2.5596
+        ]
+      },
+      "dni": {
+        "annual": 4.7616,
+        "monthly": [
+          3.6475,
+          3.9667,
+          4.4947,
+          4.7052,
+          5.371,
+          6.1061,
+          6.606,
+          6.234,
+          4.8739,
+          4.1962,
+          3.6732,
+          3.2028
+        ]
+      },
+      "pvOutput": 1618.07,
+      "optimalTilt": 30,
+      "capacityFactor": 18.471118721461185,
+      "monthlyProfile": [
+        85.23,
+        99.41,
+        138.84,
+        160.9,
+        179.66,
+        180.49,
+        187.75,
+        170.37,
+        139.21,
+        111.22,
+        88.64,
+        76.34
+      ],
+      "avgTemp": 20.94,
+      "summerTemp": 49.01,
+      "tempImpact": "Low",
+      "tempDesc": "Minimal impact on efficiency",
+      "score": 70,
+      "rating": "Very Good",
+      "color": "#fcd34d"
+    },
+    "wind": {
+      "v10": 4.32,
+      "v50": 5.91,
+      "v100": 6.7640088726578025,
+      "shearAlpha": 0.19472042179497243,
+      "wpd": 360.1406962289703,
+      "windClassDesc": "IEC Class III (Low Wind)",
+      "estimatedCF": 36.84687719212288,
+      "source": "NASA POWER (long-term climatology)",
+      "crossCheck100m": 4.776041666666664,
+      "score": 70,
+      "rating": "Very Good",
+      "color": "#22d3ee"
+    },
+    "csp": {
+      "dniDaily": 4.7616,
+      "dniAnnual": 1737.984,
+      "suitability": "Not recommended (DNI too low)",
+      "score": 20,
+      "color": "#64748b"
+    },
+    "overallScore": 63,
+    "recommendation": "Solar PV",
+    "timestamp": 1782404241346
+  },
+  "27,13": {
+    "id": "27.0000,13.0000",
+    "lat": 27,
+    "lon": 13,
+    "elevation": 532,
+    "solar": {
+      "ghi": {
+        "annual": 6.1762,
+        "monthly": [
+          4.2708,
+          5.1859,
+          6.2952,
+          7.032,
+          7.458,
+          7.9274,
+          8.0832,
+          7.537,
+          6.6146,
+          5.3904,
+          4.4042,
+          3.8686
+        ]
+      },
+      "dni": {
+        "annual": 5.9563,
+        "monthly": [
+          5.7866,
+          5.9251,
+          5.8968,
+          5.2421,
+          5.2702,
+          6.1656,
+          7.267,
+          7.0226,
+          6.2604,
+          5.7101,
+          5.5231,
+          5.3806
+        ]
+      },
+      "pvOutput": 1799.97,
+      "optimalTilt": 30,
+      "capacityFactor": 20.547602739726027,
+      "monthlyProfile": [
+        112.14,
+        122.5,
+        160.61,
+        170.36,
+        182.49,
+        180.9,
+        189.87,
+        177.18,
+        153.45,
+        134.69,
+        111.91,
+        103.86
+      ],
+      "avgTemp": 22.25,
+      "summerTemp": 45.28,
+      "tempImpact": "Low",
+      "tempDesc": "Minimal impact on efficiency",
+      "score": 85,
+      "rating": "Excellent",
+      "color": "#fbbf24"
+    },
+    "wind": {
+      "v10": 4.02,
+      "v50": 5.88,
+      "v100": 6.926344808734587,
+      "shearAlpha": 0.23627805480515962,
+      "wpd": 386.69808169303826,
+      "windClassDesc": "IEC Class III (Low Wind)",
+      "estimatedCF": 38.25919983599091,
+      "source": "NASA POWER (long-term climatology)",
+      "crossCheck100m": 6.211607142857143,
+      "score": 70,
+      "rating": "Very Good",
+      "color": "#22d3ee"
+    },
+    "csp": {
+      "dniDaily": 5.9563,
+      "dniAnnual": 2174.0495,
+      "suitability": "Good for CSP",
+      "score": 75,
+      "color": "#fb923c"
+    },
+    "overallScore": 78,
+    "recommendation": "Solar PV",
+    "timestamp": 1782404241346
+  },
+  "31.2,16.6": {
+    "id": "31.2000,16.6000",
+    "lat": 31.2,
+    "lon": 16.6,
+    "elevation": 9,
+    "solar": {
+      "ghi": {
+        "annual": 5.171,
+        "monthly": [
+          3.0098,
+          3.9094,
+          5.0498,
+          6.0257,
+          6.7303,
+          7.3181,
+          7.4014,
+          6.7457,
+          5.5562,
+          4.2806,
+          3.2674,
+          2.6938
+        ]
+      },
+      "dni": {
+        "annual": 4.7083,
+        "monthly": [
+          3.4471,
+          3.8388,
+          4.2996,
+          4.4743,
+          5.0366,
+          6.1927,
+          6.8388,
+          6.3386,
+          4.9435,
+          4.1794,
+          3.6797,
+          3.1673
+        ]
+      },
+      "pvOutput": 1557.05,
+      "optimalTilt": 30,
+      "capacityFactor": 17.774543378995432,
+      "monthlyProfile": [
+        82.29,
+        95.56,
+        133.72,
+        150.47,
+        168.62,
+        172.83,
+        181.9,
+        166.03,
+        136.87,
+        109.83,
+        86.21,
+        72.73
+      ],
+      "avgTemp": 20.87,
+      "summerTemp": 44.75,
+      "tempImpact": "Low",
+      "tempDesc": "Minimal impact on efficiency",
+      "score": 70,
+      "rating": "Very Good",
+      "color": "#fcd34d"
+    },
+    "wind": {
+      "v10": 4.67,
+      "v50": 6.04,
+      "v100": 6.747643800826068,
+      "shearAlpha": 0.1598352681259152,
+      "wpd": 357.53300580976713,
+      "windClassDesc": "IEC Class III (Low Wind)",
+      "estimatedCF": 36.70450106718679,
+      "source": "NASA POWER (long-term climatology)",
+      "crossCheck100m": 4.588750000000002,
+      "score": 70,
+      "rating": "Very Good",
+      "color": "#22d3ee"
+    },
+    "csp": {
+      "dniDaily": 4.7083,
+      "dniAnnual": 1718.5295,
+      "suitability": "Not recommended (DNI too low)",
+      "score": 20,
+      "color": "#64748b"
+    },
+    "overallScore": 63,
+    "recommendation": "Solar PV",
+    "timestamp": 1782404241346
+  }
+}
