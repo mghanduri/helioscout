@@ -2,7 +2,6 @@ node_modules/
 .env
 .DS_Store
 
-# Generated copy of the canonical assumptions register (see scripts/sync-assumptions.js).
-# The source of truth is the repo-root assumptions.json; frontend/data/assumptions.json
-# is the committed served copy.
-backend/assumptions.json
+# backend/assumptions.json is committed — see assumptions.json at repo root for the source.
+# The sync-assumptions.js prestart script refreshes the copy from the root when both are
+# available (local dev / monorepo host); the committed copy serves as the Railway deploy fallback.

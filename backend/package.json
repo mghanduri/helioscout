@@ -5,8 +5,8 @@
   "main": "server.js",
   "scripts": {
     "test": "node test/regression.test.js",
-    "postinstall": "node scripts/sync-assumptions.js",
-    "prestart": "node scripts/sync-assumptions.js",
+    "postinstall": "node scripts/sync-assumptions.js || true",
+    "prestart": "node scripts/sync-assumptions.js || true",
     "start": "node server.js"
   },
   "keywords": [],
