@@ -1572,3 +1572,42 @@ input[type="range"]::-webkit-slider-thumb:hover { box-shadow: 0 0 0 6px var(--fi
     margin-left: 2px;
     opacity: 0.7;
 }
+
+/* ── Data sources & assumptions (provenance) panel ───────────────────── */
+.provenance-panel {
+    margin-top: 16px;
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    background: var(--bg-surface);
+    font-size: 12px;
+}
+.provenance-panel > summary {
+    cursor: pointer;
+    padding: 10px 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+    list-style: none;
+}
+.provenance-panel > summary::-webkit-details-marker { display: none; }
+.provenance-panel > summary::before { content: '▸ '; color: var(--text-muted); }
+.provenance-panel[open] > summary::before { content: '▾ '; }
+.provenance-body { padding: 4px 12px 12px; }
+.prov-list {
+    display: grid;
+    grid-template-columns: minmax(110px, auto) 1fr;
+    gap: 4px 12px;
+    margin: 0 0 8px;
+}
+.prov-list dt { color: var(--text-muted); }
+.prov-list dd { margin: 0; color: var(--text-primary); }
+.prov-status { font-size: 11px; white-space: nowrap; }
+.prov-ok { color: var(--success); }
+.prov-bad { color: var(--danger); }
+.prov-basis { margin: 8px 0; }
+.prov-basis ul { margin: 4px 0 0; padding-left: 16px; }
+.prov-basis li { margin-bottom: 4px; color: var(--text-muted); }
+.prov-basis em { color: var(--text-primary); font-style: normal; font-weight: 600; }
+.prov-note { margin-top: 8px; }
+
+/* NPV sensitivity range under the headline NPV */
+.npv-range { margin-top: 4px; font-size: 12px; }

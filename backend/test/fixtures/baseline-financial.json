@@ -1,0 +1,116 @@
+{
+  "fin": {
+    "gas": {
+      "turbineName": "Siemens SGT5-2000E",
+      "adjustedHeatRate": 11514.269999999999,
+      "gasFreedMMBtu": 5757134.999999999,
+      "co2AvoidedTonnes": 305531.1544499999,
+      "domesticValue": 5757134.999999999,
+      "exportValue": 57571349.99999999
+    },
+    "lcoeSolar": {
+      "lcoe": 34.5091987837341,
+      "totalCapex": 70000000,
+      "annualOpex": 1000000,
+      "annualMWh": 219000
+    },
+    "lcoeWind": {
+      "lcoe": 51.13581629731198,
+      "totalCapex": 130000000,
+      "annualOpex": 3500000,
+      "annualMWh": 306600
+    },
+    "lcoeCsp": {
+      "lcoe": 102.9954386003005,
+      "totalCapex": 350000000,
+      "annualOpex": 5000000,
+      "annualMWh": 350400
+    },
+    "npv": {
+      "npv": 239568509.4690686,
+      "annualCashFlow": 29000000,
+      "paybackYears": 2.413793103448276
+    },
+    "derate": 11514.269999999999,
+    "mapId": "siemens-sgt5-2000e"
+  },
+  "recon": {
+    "totalCapacityMW": 6534,
+    "fleetMMBtu": 296932443.80382,
+    "fleetBcf": 286.33794002297014,
+    "ratio": 0.8948060625717817,
+    "validated": true,
+    "rowHeatRates": [
+      {
+        "name": "Misrata Power Station",
+        "heatRate": 10622.425,
+        "gasBcf": 26.246711260848603
+      },
+      {
+        "name": "Tripoli West Power Station",
+        "heatRate": 11677.980000000001,
+        "gasBcf": 30.630541986885248
+      },
+      {
+        "name": "Zliten Power Station",
+        "heatRate": 11841.69,
+        "gasBcf": 7.382363051803279
+      },
+      {
+        "name": "Ubari Power Station",
+        "heatRate": 12223.68,
+        "gasBcf": 13.010616236065575
+      },
+      {
+        "name": "South Tripoli Power Station",
+        "heatRate": 10774.9,
+        "gasBcf": 20.47958331726133
+      },
+      {
+        "name": "North Benghazi Power Station",
+        "heatRate": 10724.074999999999,
+        "gasBcf": 30.16681263355834
+      },
+      {
+        "name": "Zueitina Power Station",
+        "heatRate": 11950.83,
+        "gasBcf": 17.717422396721314
+      },
+      {
+        "name": "Al-Sarir Power Station",
+        "heatRate": 12387.39,
+        "gasBcf": 9.417761114754098
+      },
+      {
+        "name": "Derna Power Station",
+        "heatRate": 12551.099999999999,
+        "gasBcf": 22.901339803278685
+      },
+      {
+        "name": "Sabha Power Station",
+        "heatRate": 11787.12,
+        "gasBcf": 15.682439213114755
+      },
+      {
+        "name": "Al Khoms Power Station",
+        "heatRate": 12551.099999999999,
+        "gasBcf": 29.580897245901635
+      },
+      {
+        "name": "Sirte Power Station",
+        "heatRate": 11896.26,
+        "gasBcf": 15.827646983606558
+      },
+      {
+        "name": "Zawiya Power Station",
+        "heatRate": 10673.25,
+        "gasBcf": 26.77802120540019
+      },
+      {
+        "name": "Tobruk Power Station",
+        "heatRate": 11732.55,
+        "gasBcf": 20.51578357377049
+      }
+    ]
+  }
+}

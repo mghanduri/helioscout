@@ -1,3 +1,8 @@
 node_modules/
 .env
 .DS_Store
+
+# Generated copy of the canonical assumptions register (see scripts/sync-assumptions.js).
+# The source of truth is the repo-root assumptions.json; frontend/data/assumptions.json
+# is the committed served copy.
+backend/assumptions.json

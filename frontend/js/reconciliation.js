@@ -12,19 +12,12 @@ window.HelioScout = window.HelioScout || {};
  */
 HelioScout.Reconciliation = (function () {
 
-    // Natural gas energy content: ~1,037 Btu per cubic foot (HHV) =>
-    // 1 Bcf (1e9 cf) ≈ 1,037,000 MMBtu.
-    var MMBTU_PER_BCF = 1037000;
-
-    // Default national gas-to-power consumption (editable in the panel).
-    // Order-of-magnitude anchor from EIA Libya country analysis / Statistical
-    // Review of World Energy: Libyan power generation is ~99% gas-fired, and
-    // total gas consumption is dominated by the power sector. Treat as a
-    // tunable reference, not a precise published line item.
-    var DEFAULT_NATIONAL_BCF = 320;
-
-    // Default warm-season ambient used for fleet-wide derating (°C).
-    var DEFAULT_AMBIENT_C = 35;
+    // All reconciliation constants come from the dated, sourced assumptions
+    // register (assumptions.json, reconciliation section), loaded by
+    // js/assumptions.js. Read at call time so the register stays authoritative.
+    function recon() {
+        return HelioScout.requireAssumptions().reconciliation;
+    }
 
     /**
      * Compute the bottom-up fleet gas estimate.
@@ -33,9 +26,11 @@ HelioScout.Reconciliation = (function () {
      */
     function compute(plants, opts) {
         opts = opts || {};
-        var utilisation = opts.utilisation != null ? opts.utilisation : 0.45;
-        var ambientC = opts.ambientC != null ? opts.ambientC : DEFAULT_AMBIENT_C;
-        var nationalBcf = opts.nationalBcf != null ? opts.nationalBcf : DEFAULT_NATIONAL_BCF;
+        var R = recon();
+        var MMBTU_PER_BCF = R.mmbtuPerBcf;
+        var utilisation = opts.utilisation != null ? opts.utilisation : R.utilisation;
+        var ambientC = opts.ambientC != null ? opts.ambientC : R.defaultAmbientC;
+        var nationalBcf = opts.nationalBcf != null ? opts.nationalBcf : R.nationalBcf.value;
         var currentYear = new Date().getFullYear();
 
         var rows = [];
@@ -75,7 +70,7 @@ HelioScout.Reconciliation = (function () {
 
         var fleetBcf = totalMMBtu / MMBTU_PER_BCF;
         var ratio = nationalBcf > 0 ? fleetBcf / nationalBcf : 0;
-        var validated = ratio >= 0.75 && ratio <= 1.25;
+        var validated = ratio >= R.validationBand.low && ratio <= R.validationBand.high;
 
         return {
             rows: rows,
@@ -139,8 +134,9 @@ HelioScout.Reconciliation = (function () {
     }
 
     return {
-        DEFAULT_NATIONAL_BCF: DEFAULT_NATIONAL_BCF,
-        DEFAULT_AMBIENT_C: DEFAULT_AMBIENT_C,
+        // Lazy getters — the register is loaded asynchronously after this IIFE runs.
+        get DEFAULT_NATIONAL_BCF() { return recon().nationalBcf.value; },
+        get DEFAULT_AMBIENT_C() { return recon().defaultAmbientC; },
         compute: compute,
         generateHTML: generateHTML,
         /** Export the per-plant breakdown as CSV text. */

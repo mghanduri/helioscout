@@ -443,9 +443,16 @@
                             <div class="npv-highlight">
                                 <div class="npv-label">25-Year NPV (Export-Parity)</div>
                                 <div class="npv-value" id="fin-npv">—</div>
+                                <div class="npv-range text-muted" id="fin-npv-range"></div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Data sources & assumptions (provenance) -->
+                    <details id="provenance-panel" class="provenance-panel">
+                        <summary>Data sources &amp; assumptions</summary>
+                        <div id="provenance-body" class="provenance-body"></div>
+                    </details>
 
                     <!-- Actions -->
                     <div id="assessment-actions">
@@ -535,6 +542,7 @@
     <!-- JavaScript Modules (order matters) -->
     <script src="js/env.js"></script>
     <script src="js/config.js"></script>
+    <script src="js/assumptions.js"></script>
     <script src="js/api.js"></script>
     <script src="js/financial.js"></script>
     <script src="js/charts.js"></script>
