@@ -11,8 +11,7 @@ HelioScout.Map = (function() {
     let layers = {
         plants: null,
         proposed: null,
-        grid: null,
-        solarHeatmap: null
+        grid: null
     };
 
     // Callback when map is clicked
@@ -60,19 +59,22 @@ HelioScout.Map = (function() {
         layers.proposed = L.layerGroup().addTo(map);
         layers.grid = L.layerGroup(); // Not added by default
 
-        // Solar Irradiance overlay via NASA GIBS WMS
-        // MERRA-2 monthly mean surface downwelling shortwave flux (≈ GHI)
-        // Data: NASA/MERRA-2 via GIBS — public domain, no API key required
-        layers.solarHeatmap = L.tileLayer.wms(
-            'https://gibs.earthdata.nasa.gov/wms/epsg3857/best/wms.cgi', {
-                layers: 'MERRA2_Surface_Downwelling_Shortwave_Flux_Monthly_Mean',
-                format: 'image/png',
-                transparent: true,
-                opacity: 0.55,
-                TIME: '2024-06-01',
-                attribution: 'Solar irradiance: <a href="https://gmao.gsfc.nasa.gov/reanalysis/MERRA-2/" target="_blank">NASA MERRA-2</a> via <a href="https://earthdata.nasa.gov/eosdis/science-system-description/eosdis-components/gibs" target="_blank">NASA GIBS</a>'
-            }
-        ); // Not added by default
+        // Global-Solar-Atlas-style irradiance overlay (data-driven canvas raster).
+        // Built from a precomputed NASA POWER GHI grid and shaded with the GSA
+        // orange/red ramp — see js/solar-overlay.js. Loaded async; ready by the
+        // time the user flips the "Solar Irradiance" toggle.
+        if (HelioScout.SolarOverlay) {
+            HelioScout.SolarOverlay.load(map).catch((err) =>
+                console.error('[Map] Solar overlay failed to load:', err)
+            );
+        }
+
+        // Global-Wind-Atlas-style 100 m wind-speed overlay (same engine).
+        if (HelioScout.WindOverlay) {
+            HelioScout.WindOverlay.load(map).catch((err) =>
+                console.error('[Map] Wind overlay failed to load:', err)
+            );
+        }
 
         // Handle Map Clicks
         map.on('click', function(e) {
@@ -152,8 +154,18 @@ HelioScout.Map = (function() {
          * Toggle Overlay Layer
          */
         toggleLayer(layerName, show) {
+            // Solar / wind resource layers are canvas overlays with their own modules.
+            if (layerName === 'solarHeatmap') {
+                if (HelioScout.SolarOverlay) HelioScout.SolarOverlay.toggle(show);
+                return;
+            }
+            if (layerName === 'windHeatmap') {
+                if (HelioScout.WindOverlay) HelioScout.WindOverlay.toggle(show);
+                return;
+            }
+
             if (!layers[layerName]) return;
-            
+
             if (show) {
                 layers[layerName].addTo(map);
             } else {

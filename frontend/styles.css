@@ -1507,6 +1507,63 @@ input[type="range"]::-webkit-slider-thumb:hover { box-shadow: 0 0 0 6px var(--fi
     background: rgba(100, 116, 139, 0.4);
 }
 
+/* --- Resource gradient legend (Global Solar/Wind Atlas style) --- */
+.raster-legend {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-md);
+    padding: 10px 12px;
+    font-family: 'Inter', sans-serif;
+    color: var(--text-secondary);
+    width: 200px;
+    box-shadow: var(--shadow-md);
+    user-select: none;
+    margin: 0 8px 8px 0;
+}
+
+.raster-legend__title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.raster-legend__bar {
+    height: 12px;
+    border-radius: 3px;
+    border: 1px solid var(--glass-border);
+}
+
+.raster-legend__ticks {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    font-size: 9px;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+}
+
+.raster-legend__unit {
+    margin-top: 6px;
+    font-size: 10px;
+    color: var(--text-secondary);
+}
+
+.raster-legend__src {
+    margin-top: 2px;
+    font-size: 9px;
+    color: var(--text-muted);
+}
+
+/* Slightly soften pixel edges of the raster as it scales. */
+.raster-overlay-img {
+    image-rendering: auto;
+}
+
 /* IEC standard reference badge */
 .map-legend__std {
     font-size: 8px;
