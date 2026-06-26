@@ -495,6 +495,48 @@ input[type=range]::-moz-range-thumb {
 }
 .site-card__assess:hover, .btn-assess:hover { background: var(--bg-subtle); }
 
+/* ──────────── LEAFLET MAP LEGEND CONTROL ──────────── */
+.map-legend {
+  background: rgba(255,255,255,0.97); border: 1px solid var(--border);
+  border-radius: 3px; padding: 10px 12px; min-width: 160px;
+  box-shadow: 0 2px 8px rgba(20,40,70,.12);
+  font-family: var(--ff-sans); font-size: 11px; color: var(--text);
+}
+.map-legend__header {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px;
+}
+.map-legend__section {
+  margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light);
+}
+.map-legend__section:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.map-legend__title {
+  font-size: 9px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.7px; color: var(--text-muted); margin-bottom: 5px;
+}
+.map-legend__item {
+  display: flex; align-items: center; gap: 7px;
+  margin-bottom: 4px; font-size: 11px; color: var(--text-mid);
+}
+.map-legend__item:last-child { margin-bottom: 0; }
+.map-legend__marker {
+  width: 14px; height: 14px; border-radius: 50%; border: 2px solid;
+  background: rgba(255,255,255,0.8);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.map-legend__marker--proposed { border-style: dashed; background: rgba(255,255,255,0.6); }
+.map-legend__marker--proposed svg { width: 9px; height: 9px; display: block; }
+.map-legend__marker--assessment {
+  border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+  border-color: #64748b; background: rgba(100,116,139,0.4);
+}
+.map-legend__marker--substation {
+  width: 9px; height: 9px; border-radius: 2px;
+  border: 2px solid #f59e0b; background: rgba(245,158,11,0.25);
+}
+.map-legend__line { width: 16px; height: 3px; border-radius: 2px; flex-shrink: 0; align-self: center; }
+.map-legend__std { font-size: 8px; color: var(--text-muted); margin-left: 2px; opacity: 0.7; }
+
 /* Utility */
 .text-muted { color: var(--text-muted); }
 .empty-state { padding: 16px; font: 500 11px var(--ff-sans); color: var(--text-muted); text-align: center; }
