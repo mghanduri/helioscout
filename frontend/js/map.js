@@ -339,7 +339,13 @@ HelioScout.Map = (function() {
                 onAdd() {
                     const div = L.DomUtil.create('div', 'map-legend');
                     div.innerHTML = `
-                        <div class="map-legend__header">Map Legend</div>
+                        <div class="map-legend__header">
+                            Map Legend
+                            <button class="map-legend__toggle" aria-label="Collapse legend">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="18,15 12,9 6,15"/></svg>
+                            </button>
+                        </div>
+                        <div class="map-legend__body">
                         <div class="map-legend__section">
                             <div class="map-legend__title">Existing Power Plants (GECOL)</div>
                             <div class="map-legend__item">
@@ -408,7 +414,12 @@ HelioScout.Map = (function() {
                                 Assessed Location
                             </div>
                         </div>
+                        </div>
                     `;
+                    div.querySelector('.map-legend__toggle').addEventListener('click', function() {
+                        div.classList.toggle('map-legend--collapsed');
+                        this.setAttribute('aria-label', div.classList.contains('map-legend--collapsed') ? 'Expand legend' : 'Collapse legend');
+                    });
                     L.DomEvent.disableClickPropagation(div);
                     return div;
                 }

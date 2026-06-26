@@ -505,7 +505,16 @@ input[type=range]::-moz-range-thumb {
 .map-legend__header {
   font-size: 10px; font-weight: 700; text-transform: uppercase;
   letter-spacing: 1px; color: var(--text-muted); margin-bottom: 8px;
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; cursor: pointer;
 }
+.map-legend__toggle {
+  background: none; border: none; padding: 0; cursor: pointer;
+  color: var(--text-muted); display: flex; align-items: center; flex-shrink: 0;
+  transition: transform 0.18s ease;
+}
+.map-legend--collapsed .map-legend__toggle { transform: rotate(180deg); }
+.map-legend--collapsed .map-legend__body { display: none; }
+.map-legend--collapsed { padding-bottom: 10px; }
 .map-legend__section {
   margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid var(--border-light);
 }
