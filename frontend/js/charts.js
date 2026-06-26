@@ -23,12 +23,12 @@ HelioScout.Charts = (function() {
         maintainAspectRatio: false,
         plugins: {
             legend: {
-                labels: { color: colors.text, font: { family: 'Inter', size: 11 } }
+                labels: { color: colors.text, font: { family: 'Libre Franklin', size: 11 } }
             },
             tooltip: {
                 backgroundColor: 'rgba(17, 24, 39, 0.9)',
-                titleFont: { family: 'Inter', size: 12 },
-                bodyFont: { family: 'Inter', size: 12 },
+                titleFont: { family: 'Libre Franklin', size: 12 },
+                bodyFont: { family: 'Libre Franklin', size: 12 },
                 padding: 10,
                 cornerRadius: 8,
                 borderColor: 'rgba(255, 255, 255, 0.1)',
@@ -126,7 +126,7 @@ HelioScout.Charts = (function() {
                         r: {
                             angleLines: { color: colors.grid },
                             grid: { color: colors.grid },
-                            pointLabels: { color: colors.text, font: { family: 'Inter', size: 11, weight: '600' } },
+                            pointLabels: { color: colors.text, font: { family: 'Libre Franklin', size: 11, weight: '600' } },
                             ticks: { display: false, min: 0, max: 100 }
                         }
                     },

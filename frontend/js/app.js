@@ -128,23 +128,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 1. Initialize Map
     HelioScout.Map.init('map');
     HelioScout.Map.addLegend();
-    
+    window._hsMap = HelioScout.Map.getMap();
+
     // Map Click Handler -> Trigger Assessment
     HelioScout.Map.onMapClick((lat, lon) => {
         runAssessment(lat, lon);
     });
-    
+
     // Update Coordinates Display on Mousemove
     HelioScout.Map.getMap().on('mousemove', (e) => {
         els.coordLat.textContent = `${e.latlng.lat.toFixed(4)}°${e.latlng.lat >= 0 ? 'N' : 'S'}`;
         els.coordLon.textContent = `${e.latlng.lng.toFixed(4)}°${e.latlng.lng >= 0 ? 'E' : 'W'}`;
     });
 
+    // Source strip UTC clock
+    function updateStripTime() {
+        const el = document.getElementById('source-strip-time');
+        if (!el) return;
+        const now = new Date();
+        const utc = now.toUTCString().match(/(\d\d:\d\d:\d\d)/)?.[1] || '—';
+        el.textContent = `UTC ${utc} · CRS EPSG:4326 · LAST SYNC 00:14`;
+    }
+    updateStripTime();
+    setInterval(updateStripTime, 1000);
+
     // Load Initial Data (Plants & Proposals)
     try {
         await HelioScout.Proposals.loadData();
         const plants = HelioScout.Proposals.getPlants();
-        const proposals = HelioScout.Proposals.getProposedSites('all');
+        const proposals = HelioScout.Proposals.getProposedSites(null);
         
         HelioScout.Map.renderPlants(plants);
         HelioScout.Map.renderProposedSites(proposals);
@@ -188,7 +200,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function runAssessment(lat, lon) {
         currentState.currentLat = lat;
         currentState.currentLon = lon;
-        
+
         // Check bounds if in Libya mode
         if (currentState.mode === 'libya') {
             if (lat < 19 || lat > 34 || lon < 9 || lon > 25) {
@@ -196,6 +208,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
         }
+
+        // Show loading state in right rail
+        const emptyEl = document.getElementById('assessment-empty');
+        if (emptyEl) emptyEl.classList.add('hidden');
+        els.loadingOverlay.classList.remove('hidden');
+        els.contentOverlay.classList.add('hidden');
 
         // Fetch Assessment Data from Backend
         const assessment = await HelioScout.API.fetchAllData(lat, lon);
@@ -312,19 +330,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function populateUI(data) {
-        // Overall
-        const scoreCircle = Math.round(327 - (327 * data.overallScore / 100)); // 327 is approx dasharray for r=52
+        // Overall score display (hidden ring kept for compat)
+        const scoreCircle = Math.round(327 - (327 * data.overallScore / 100));
         els.scoreRingFill.style.strokeDashoffset = scoreCircle;
-        
-        // Color the ring
         let ringColor = '#ef4444';
         if (data.overallScore >= 80) ringColor = '#10b981';
         else if (data.overallScore >= 60) ringColor = '#f59e0b';
         els.scoreRingFill.style.stroke = ringColor;
-        
-        // Animate counter (simplified)
         els.scoreRingValue.textContent = data.overallScore;
-        els.recText.textContent = `Recommended: ${data.recommendation}`;
+
+        // Grade letter + score bar (Federal Analytical design)
+        const grade = data.overallScore >= 90 ? 'A' : data.overallScore >= 80 ? 'B' : data.overallScore >= 70 ? 'C' : data.overallScore >= 60 ? 'D' : 'F';
+        const gradeEl = document.getElementById('grade-letter');
+        if (gradeEl) gradeEl.textContent = grade;
+        const barEl = document.getElementById('score-bar-fill');
+        if (barEl) barEl.style.width = `${data.overallScore}%`;
+
+        // Score rating text + color
+        const ratingColor = data.overallScore >= 80 ? '#1f9d6b' : data.overallScore >= 60 ? '#d99a16' : '#c0392b';
+        const ratingLabel = data.overallScore >= 80 ? 'High suitability' : data.overallScore >= 60 ? 'Moderate suitability' : 'Low suitability';
+        els.recText.textContent = ratingLabel;
+        els.recText.style.color = ratingColor;
+        document.getElementById('grade-letter').style.color = ratingColor;
+        document.getElementById('grade-box').style.borderColor = ratingColor;
+        if (barEl) barEl.style.background = ratingColor;
 
         // Provenance / data sources panel
         renderProvenance(data);
@@ -831,18 +860,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function renderProposalsList(sites) {
         const list = document.getElementById('proposals-list');
-        list.innerHTML = '';
-        sites.forEach(site => {
-            list.innerHTML += HelioScout.Proposals.generateSiteCard(site);
-        });
-        
-        // Bind assess buttons
+        const countEl = document.getElementById('proposals-count');
+        if (countEl) countEl.textContent = sites.length;
+
+        const typeLabels = { solar: 'Solar PV', wind: 'Wind', hybrid: 'Hybrid', csp: 'CSP' };
+        const typeColors = { solar: '#b5560f', wind: '#1f6fb2', hybrid: '#7a5cb2', csp: '#c08a16' };
+
+        list.innerHTML = sites.map(site => {
+            const color = typeColors[site.type] || '#8595a4';
+            const label = typeLabels[site.type] || site.type;
+            return `<div class="site-row">
+                <div class="site-row-name">${site.name}</div>
+                <div><span class="site-type-chip" style="color:${color}">${label}</span></div>
+                <div style="text-align:right">${site.estimatedCapacityMW} MW</div>
+                <div style="text-align:right">—</div>
+                <div style="text-align:right">—</div>
+                <div style="text-align:right">—</div>
+                <div style="text-align:right">—</div>
+                <div style="text-align:right"><button class="site-row-assess site-card__assess" data-lat="${site.lat}" data-lon="${site.lon}">Assess →</button></div>
+            </div>`;
+        }).join('');
+
         list.querySelectorAll('.site-card__assess').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const lat = parseFloat(e.currentTarget.getAttribute('data-lat'));
                 const lon = parseFloat(e.currentTarget.getAttribute('data-lon'));
                 HelioScout.Map.flyTo(lat, lon, 10);
-                setTimeout(() => runAssessment(lat, lon), 1500); // Wait for flight
+                setTimeout(() => runAssessment(lat, lon), 1500);
             });
         });
     }

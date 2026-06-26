@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#dde4ea;font-family:'Libre Franklin',sans-serif}
+  input[type=range]{-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;background:#cdd8e1;outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;background:#103a63;cursor:pointer;border:2px solid #fff;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+  input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#103a63;cursor:pointer;border:2px solid #fff}
+  select{font-family:'Libre Franklin',sans-serif}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:#c2cdd7;border-radius:5px;border:2px solid #fff}
+</style>
+</helmet>
+
+<div style="display:flex;justify-content:center;padding:26px 26px 40px">
+<div style="width:1440px;border:1px solid #c5d0da;border-radius:4px;box-shadow:0 10px 40px rgba(20,40,70,.16);overflow:hidden">
+<div data-screen-label="HelioScout — Federal Analytical" style="height:912px;display:flex;flex-direction:column;font-family:'Libre Franklin',sans-serif;color:#18222e;background:#eef1f4">
+
+  <!-- ============ TOPBAR ============ -->
+  <div style="height:56px;flex:none;display:flex;align-items:center;gap:18px;padding:0 18px;background:#fff;border-bottom:1px solid #b9c6d2">
+    <div style="display:flex;align-items:center;gap:10px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.6" fill="#103a63"/><g stroke="#103a63" stroke-width="1.7" stroke-linecap="round"><line x1="12" y1="1.5" x2="12" y2="4.3"/><line x1="12" y1="19.7" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="4.3" y2="12"/><line x1="19.7" y1="12" x2="22.5" y2="12"/><line x1="4.6" y1="4.6" x2="6.5" y2="6.5"/><line x1="17.5" y1="17.5" x2="19.4" y2="19.4"/><line x1="19.4" y1="4.6" x2="17.5" y2="6.5"/><line x1="6.5" y1="17.5" x2="4.6" y2="19.4"/></g></svg>
+      <div style="font:800 17px/1 'Libre Franklin',sans-serif;letter-spacing:-.01em">HelioScout</div>
+      <div style="width:1px;height:22px;background:#d3dce4"></div>
+      <div style="font:600 9.5px/1.3 'Libre Franklin',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#7a8794">Renewable Siting<br>&amp; Gas-Displacement</div>
+    </div>
+    <div style="flex:1;max-width:430px;display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;background:#f4f7f9;border:1px solid #d3dce4;border-radius:2px">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#8595a4" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.6" y2="16.6"/></svg>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#90a0ae;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Search location or paste coordinates…</span>
+    </div>
+    <div style="flex:1"></div>
+    <!-- mode toggle -->
+    <div style="display:flex;height:32px;border:1px solid #d3dce4;border-radius:2px;overflow:hidden">
+      <button onClick="{{ setLibya }}" style="{{ modeLibyaStyle }}">Libya mode</button>
+      <button onClick="{{ setUniversal }}" style="{{ modeUniversalStyle }}">Universal</button>
+    </div>
+    <div style="width:1px;height:26px;background:#d3dce4"></div>
+    <div style="display:flex;align-items:center;gap:9px">
+      <div style="width:30px;height:30px;border-radius:50%;background:#103a63;color:#fff;display:flex;align-items:center;justify-content:center;font:700 12px 'Libre Franklin',sans-serif">RA</div>
+      <div style="line-height:1.25"><div style="font:600 12px 'Libre Franklin',sans-serif">R. Almasi</div><div style="font:500 10px 'Libre Franklin',sans-serif;color:#8595a4">Program Analyst · NOC</div></div>
+    </div>
+  </div>
+
+  <!-- data-source strip -->
+  <sc-if value="{{ showStrip }}" hint-placeholder-val="{{ true }}">
+  <div style="height:26px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:#f4f7f9;border-bottom:1px solid #d3dce4;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.02em;color:#6b7a88">
+    <div>SOURCE: NASA POWER v9 climatology · EU PVGIS · GECOL fleet register · IEC 61215 / 61400 methodology</div>
+    <div>UTC 14:22:06 · CRS EPSG:4326 · LAST SYNC 00:14</div>
+  </div>
+  </sc-if>
+
+  <!-- ============ BODY ============ -->
+  <div style="flex:1;display:flex;min-height:0">
+
+    <!-- LEFT RAIL -->
+    <div style="width:248px;flex:none;background:#fff;border-right:1px solid #d3dce4;display:flex;flex-direction:column;overflow:auto">
+      <div style="padding:14px 16px 8px;font:700 10px 'Libre Franklin',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#7a8794">Map Layers</div>
+
+      <div style="padding:0 16px 6px;font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#a6b3bf">Basemap</div>
+      <label onClick="{{ toggleSatellite }}" style="display:flex;align-items:center;gap:10px;padding:6px 16px;font:500 12.5px 'Libre Franklin',sans-serif;cursor:pointer"><span style="{{ box.satellite }}"><sc-if value="{{ layers.satellite }}" hint-placeholder-val="{{ false }}"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><polyline points="4,12 10,18 20,6"/></svg></sc-if></span>Satellite imagery</label>
+
+      <div style="padding:10px 16px 6px;font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#a6b3bf">Resource</div>
+      <label onClick="{{ toggleSolar }}" style="display:flex;align-items:center;justify-content:space-between;padding:6px 16px;font:500 12.5px 'Libre Franklin',sans-serif;cursor:pointer"><span style="display:flex;align-items:center;gap:10px"><span style="{{ box.solar }}"><sc-if value="{{ layers.solar }}" hint-placeholder-val="{{ true }}"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><polyline points="4,12 10,18 20,6"/></svg></sc-if></span>Solar irradiance (GHI)</span><span style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#a6b3bf">85%</span></label>
+      <label onClick="{{ toggleWind }}" style="display:flex;align-items:center;gap:10px;padding:6px 16px;font:500 12.5px 'Libre Franklin',sans-serif;cursor:pointer"><span style="{{ box.wind }}"><sc-if value="{{ layers.wind }}" hint-placeholder-val="{{ false }}"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><polyline points="4,12 10,18 20,6"/></svg></sc-if></span>Wind speed · 100m</label>
+
+      <div style="padding:10px 16px 6px;font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#a6b3bf">Infrastructure</div>
+      <label onClick="{{ togglePlants }}" style="display:flex;align-items:center;gap:10px;padding:6px 16px;font:500 12.5px 'Libre Franklin',sans-serif;cursor:pointer"><span style="{{ box.plants }}"><sc-if value="{{ layers.plants }}" hint-placeholder-val="{{ true }}"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><polyline points="4,12 10,18 20,6"/></svg></sc-if></span>GECOL thermal plants</label>
+      <label onClick="{{ toggleProposed }}" style="display:flex;align-items:center;gap:10px;padding:6px 16px;font:500 12.5px 'Libre Franklin',sans-serif;cursor:pointer"><span style="{{ box.proposed }}"><sc-if value="{{ layers.proposed }}" hint-placeholder-val="{{ true }}"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><polyline points="4,12 10,18 20,6"/></svg></sc-if></span>Proposed RE sites</label>
+      <label onClick="{{ toggleGrid }}" style="display:flex;align-items:center;gap:10px;padding:6px 16px;font:500 12.5px 'Libre Franklin',sans-serif;cursor:pointer"><span style="{{ box.grid }}"><sc-if value="{{ layers.grid }}" hint-placeholder-val="{{ false }}"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3.5"><polyline points="4,12 10,18 20,6"/></svg></sc-if></span>Assessment grid</label>
+
+      <!-- fleet validation -->
+      <div style="margin-top:14px;padding:0 16px">
+        <div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#a6b3bf;margin-bottom:8px">Methodology</div>
+        <button style="width:100%;height:38px;border:1px solid #b9c6d2;background:#f4f7f9;color:#16202b;border-radius:2px;font:600 11.5px 'Libre Franklin',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#103a63" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg>Reconcile fleet gas</button>
+        <div style="margin-top:6px;font:500 10px/1.4 'Libre Franklin',sans-serif;color:#a6b3bf">Bottom-up fleet gas vs. national reference — validates heat-rate method.</div>
+      </div>
+
+      <div style="margin-top:auto;border-top:1px solid #e4eaef;padding:13px 16px">
+        <div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#7a8794;margin-bottom:9px">Legend — GECOL plants</div>
+        <div style="display:flex;flex-direction:column;gap:6px;font:500 11px 'Libre Franklin',sans-serif">
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:9px;height:9px;border-radius:50%;border:2px solid #1f9d6b"></span>Operational</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:9px;height:9px;border-radius:50%;border:2px solid #d99a16"></span>Partially operational</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:9px;height:9px;border-radius:50%;border:2px solid #c0392b"></span>Offline / damaged</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAP -->
+    <div style="flex:1;position:relative;min-width:0;background:#e3cda8">
+      <svg viewBox="0 0 760 600" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%">
+        <defs>
+          <radialGradient id="faIrr1" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#e8821e" stop-opacity=".5"/><stop offset="100%" stop-color="#e8821e" stop-opacity="0"/></radialGradient>
+          <radialGradient id="faIrr2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#cf5b14" stop-opacity=".46"/><stop offset="100%" stop-color="#cf5b14" stop-opacity="0"/></radialGradient>
+          <linearGradient id="faDesert" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ecdcbf"/><stop offset="100%" stop-color="#dcc096"/></linearGradient>
+          <pattern id="faGrid" width="76" height="64" patternUnits="userSpaceOnUse"><path d="M76 0H0V64" fill="none" stroke="#103a63" stroke-opacity=".07" stroke-width="1"/></pattern>
+        </defs>
+        <rect x="0" y="0" width="760" height="600" fill="url(#faDesert)"/>
+        <ellipse cx="430" cy="430" rx="320" ry="240" fill="url(#faIrr1)"/>
+        <ellipse cx="250" cy="520" rx="220" ry="170" fill="url(#faIrr2)"/>
+        <ellipse cx="640" cy="470" rx="200" ry="160" fill="url(#faIrr1)"/>
+        <path d="M0,150 C120,118 210,168 330,140 C470,107 580,162 760,128 L760,0 L0,0 Z" fill="#aec6d6"/>
+        <path d="M0,150 C120,118 210,168 330,140 C470,107 580,162 760,128" fill="none" stroke="#7d96a8" stroke-width="1.4"/>
+        <rect x="0" y="0" width="760" height="600" fill="url(#faGrid)"/>
+        <path d="M40,300 C180,260 320,330 470,300 C600,275 690,320 760,300" fill="none" stroke="#b5560f" stroke-opacity=".32" stroke-width="1" stroke-dasharray="5 5"/>
+        <path d="M20,400 C160,365 300,420 460,395 C620,372 700,410 760,398" fill="none" stroke="#b5560f" stroke-opacity=".28" stroke-width="1" stroke-dasharray="5 5"/>
+        <!-- GECOL plants -->
+        <g>
+          <g transform="translate(165,255)"><circle r="6.5" fill="#13283a" stroke="#1f9d6b" stroke-width="2"/></g>
+          <g transform="translate(250,290)"><circle r="6.5" fill="#13283a" stroke="#1f9d6b" stroke-width="2"/></g>
+          <g transform="translate(560,275)"><circle r="6.5" fill="#13283a" stroke="#d99a16" stroke-width="2"/></g>
+          <g transform="translate(650,235)"><circle r="6.5" fill="#13283a" stroke="#1f9d6b" stroke-width="2"/></g>
+          <g transform="translate(700,330)"><circle r="6.5" fill="#13283a" stroke="#1f9d6b" stroke-width="2"/></g>
+          <g transform="translate(470,360)"><circle r="6.5" fill="#13283a" stroke="#c0392b" stroke-width="2"/></g>
+          <g transform="translate(360,300)"><circle r="6.5" fill="#13283a" stroke="#1f9d6b" stroke-width="2"/></g>
+        </g>
+        <!-- proposed sites -->
+        <g>
+          <g transform="translate(300,420)"><rect x="-6" y="-6" width="12" height="12" transform="rotate(45)" fill="#fff" stroke="#e8821e" stroke-width="2"/></g>
+          <g transform="translate(540,470)"><rect x="-6" y="-6" width="12" height="12" transform="rotate(45)" fill="#fff" stroke="#e8821e" stroke-width="2"/></g>
+          <g transform="translate(210,540)"><rect x="-6" y="-6" width="12" height="12" transform="rotate(45)" fill="#fff" stroke="#1f6fb2" stroke-width="2"/></g>
+          <g transform="translate(620,540)"><rect x="-6" y="-6" width="12" height="12" transform="rotate(45)" fill="#fff" stroke="#7a5cb2" stroke-width="2"/></g>
+        </g>
+        <!-- selected crosshair : Fezzan -->
+        <g transform="translate(285,455)">
+          <circle r="22" fill="#103a63" fill-opacity=".08" stroke="#103a63" stroke-width="1" stroke-dasharray="3 3"/>
+          <line x1="-30" y1="0" x2="-9" y2="0" stroke="#103a63" stroke-width="1.4"/><line x1="9" y1="0" x2="30" y2="0" stroke="#103a63" stroke-width="1.4"/>
+          <line x1="0" y1="-30" x2="0" y2="-9" stroke="#103a63" stroke-width="1.4"/><line x1="0" y1="9" x2="0" y2="30" stroke="#103a63" stroke-width="1.4"/>
+          <rect x="-7" y="-7" width="14" height="14" transform="rotate(45)" fill="#103a63" stroke="#fff" stroke-width="2"/>
+        </g>
+      </svg>
+
+      <div style="position:absolute;top:12px;right:12px;display:flex;flex-direction:column;background:#fff;border:1px solid #c5d0da;border-radius:2px;overflow:hidden">
+        <div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;font:400 18px 'Libre Franklin',sans-serif;color:#103a63;border-bottom:1px solid #e4eaef">+</div>
+        <div style="width:30px;height:30px;display:flex;align-items:center;justify-content:center;font:400 18px 'Libre Franklin',sans-serif;color:#103a63">−</div>
+      </div>
+      <div style="position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:9px;height:28px;padding:0 11px;background:rgba(255,255,255,.94);border:1px solid #c5d0da;border-radius:2px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#3a4856"><svg width="11" height="11" viewBox="0 0 24 24" fill="#103a63"><path d="M12 2l3 8h-6z"/><path d="M12 22l-3-8h6z" fill="#8595a4"/></svg>N · 1:4,000,000</div>
+      <div style="position:absolute;bottom:12px;left:12px;display:flex;align-items:center;gap:8px;height:28px;padding:0 11px;background:rgba(19,40,58,.92);border-radius:2px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#dce6ee">26.5000°N&nbsp;&nbsp;14.0000°E&nbsp;<span style="color:#7e93a4">·</span>&nbsp;Fezzan</div>
+      <div style="position:absolute;bottom:12px;right:12px;background:rgba(255,255,255,.95);border:1px solid #c5d0da;border-radius:2px;padding:8px 11px">
+        <div style="font:700 8.5px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7a8794;margin-bottom:5px">GHI · kWh/m²/day</div>
+        <div style="width:150px;height:8px;border-radius:1px;background:linear-gradient(90deg,#fde9c8,#f6c267,#ef9a3a,#df6a1e,#b5400d)"></div>
+        <div style="display:flex;justify-content:space-between;margin-top:3px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#6b7a88"><span>4.0</span><span>5.0</span><span>6.0</span><span>7.0</span></div>
+      </div>
+    </div>
+
+    <!-- RIGHT RAIL : ASSESSMENT -->
+    <div style="width:392px;flex:none;background:#fff;border-left:1px solid #d3dce4;display:flex;flex-direction:column;overflow:auto">
+      <!-- header -->
+      <div style="padding:14px 18px 12px;border-bottom:1px solid #e4eaef">
+        <div style="display:flex;align-items:center;justify-content:space-between"><div style="font:700 10px 'Libre Franklin',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#7a8794">Site Assessment</div><div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#a6b3bf">#LY-FZ-01</div></div>
+        <div style="margin-top:7px;display:flex;align-items:center;gap:9px"><div style="font:700 18px 'Libre Franklin',sans-serif">Fezzan Solar Hub</div><span style="font:600 10px 'Libre Franklin',sans-serif;color:#b5560f;background:#fbedd9;border:1px solid #f0d2a3;padding:2px 7px;border-radius:2px">SOLAR PV</span></div>
+        <div style="margin-top:4px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#6b7a88">26.5000°N · 14.0000°E · nearest grid: Sabha substation</div>
+      </div>
+
+      <!-- suitability -->
+      <div style="padding:15px 18px;border-bottom:1px solid #e4eaef;display:flex;align-items:center;gap:16px">
+        <div style="width:62px;height:62px;flex:none;border:2px solid #103a63;border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#f4f7f9"><div style="font:800 26px/1 'Libre Franklin',sans-serif;color:#103a63">A</div></div>
+        <div style="flex:1">
+          <div style="display:flex;align-items:baseline;gap:6px"><span style="font:800 22px/1 'Libre Franklin',sans-serif">92</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#8595a4">/ 100</span><span style="margin-left:auto;font:600 11px 'Libre Franklin',sans-serif;color:#1f9d6b">High suitability</span></div>
+          <div style="margin-top:8px;display:flex;gap:3px">
+            <div style="flex:1;height:6px;background:#103a63"></div><div style="flex:1;height:6px;background:#103a63"></div><div style="flex:1;height:6px;background:#103a63"></div><div style="flex:1;height:6px;background:#103a63"></div><div style="flex:1;height:6px;background:#103a63"></div>
+          </div>
+          <div style="margin-top:6px;font:500 10.5px 'Libre Franklin',sans-serif;color:#8595a4">Composite of resource, terrain, grid &amp; land constraints</div>
+        </div>
+      </div>
+
+      <!-- tabs -->
+      <div style="display:flex;border-bottom:1px solid #d3dce4;padding:0 8px;flex:none">
+        <button onClick="{{ tabSolar }}" style="{{ t.solar }}">Solar</button>
+        <button onClick="{{ tabWind }}" style="{{ t.wind }}">Wind</button>
+        <button onClick="{{ tabCsp }}" style="{{ t.csp }}">CSP</button>
+        <button onClick="{{ tabCharts }}" style="{{ t.charts }}">Charts</button>
+        <sc-if value="{{ libyaMode }}" hint-placeholder-val="{{ true }}"><button onClick="{{ tabFinance }}" style="{{ t.finance }}">Finance</button></sc-if>
+      </div>
+
+      <!-- SOLAR TAB -->
+      <sc-if value="{{ isSolar }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="display:grid;grid-template-columns:1fr 1fr">
+          <div style="padding:13px 18px;border-bottom:1px solid #e4eaef;border-right:1px solid #e4eaef"><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8595a4">Annual GHI</div><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:20px;color:#16202b">7.05<span style="font-size:11px;color:#8595a4"> kWh/m²/d</span></div></div>
+          <div style="padding:13px 18px;border-bottom:1px solid #e4eaef"><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8595a4">PV yield</div><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:20px;color:#16202b">2,010<span style="font-size:11px;color:#8595a4"> kWh/kWp</span></div></div>
+          <div style="padding:13px 18px;border-bottom:1px solid #e4eaef;border-right:1px solid #e4eaef"><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8595a4">Capacity factor</div><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:20px;color:#16202b">22.9<span style="font-size:11px;color:#8595a4"> %</span></div></div>
+          <div style="padding:13px 18px;border-bottom:1px solid #e4eaef"><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8595a4">Optimal tilt</div><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:20px;color:#16202b">26<span style="font-size:11px;color:#8595a4"> °</span></div></div>
+          <div style="padding:13px 18px;border-bottom:1px solid #e4eaef;border-right:1px solid #e4eaef"><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8595a4">Avg temp</div><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:20px;color:#16202b">24.1<span style="font-size:11px;color:#8595a4"> °C</span></div></div>
+          <div style="padding:13px 18px;border-bottom:1px solid #e4eaef"><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8595a4">Temp impact</div><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:20px;color:#c0392b">−4.2<span style="font-size:11px;color:#8595a4"> % yield</span></div></div>
+        </div>
+        <div style="padding:15px 18px">
+          <div style="display:flex;align-items:center;justify-content:space-between;font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7a8794"><span>Solar PV score</span><span style="font-family:'IBM Plex Mono',monospace;color:#1f9d6b">94 · Excellent</span></div>
+          <div style="margin-top:8px;height:8px;border-radius:1px;background:#e4eaef;overflow:hidden"><div style="width:94%;height:100%;background:#103a63"></div></div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- WIND TAB -->
+      <sc-if value="{{ isWind }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="display:grid;grid-template-columns:1fr 1fr">
+          <div style="padding:13px 18px;border-bottom:1px solid #e4eaef;border-right:1px solid #e4eaef"><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8595a4">Wind speed · 100m</div><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:20px;color:#16202b">4.2<span style="font-size:11px;color:#8595a4"> m/s</span></div></div>
+          <div style="padding:13px 18px;border-bottom:1px solid #e4eaef"><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8595a4">Power density</div><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:20px;color:#16202b">62<span style="font-size:11px;color:#8595a4"> W/m²</span></div></div>
+          <div style="padding:13px 18px;border-bottom:1px solid #e4eaef;border-right:1px solid #e4eaef"><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8595a4">Wind class</div><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:20px;color:#16202b">1<span style="font-size:11px;color:#8595a4"> · poor</span></div></div>
+          <div style="padding:13px 18px;border-bottom:1px solid #e4eaef"><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8595a4">Est. cap. factor</div><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:20px;color:#16202b">11.4<span style="font-size:11px;color:#8595a4"> %</span></div></div>
+          <div style="padding:13px 18px;border-bottom:1px solid #e4eaef;border-right:1px solid #e4eaef"><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8595a4">Wind speed · 50m</div><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:20px;color:#16202b">3.8<span style="font-size:11px;color:#8595a4"> m/s</span></div></div>
+          <div style="padding:13px 18px;border-bottom:1px solid #e4eaef"><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8595a4">Wind speed · 10m</div><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:20px;color:#16202b">3.1<span style="font-size:11px;color:#8595a4"> m/s</span></div></div>
+        </div>
+        <div style="padding:15px 18px">
+          <div style="display:flex;align-items:center;justify-content:space-between;font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7a8794"><span>Wind score</span><span style="font-family:'IBM Plex Mono',monospace;color:#c0392b">31 · Poor</span></div>
+          <div style="margin-top:8px;height:8px;border-radius:1px;background:#e4eaef;overflow:hidden"><div style="width:31%;height:100%;background:#7d96a8"></div></div>
+          <div style="margin-top:10px;font:500 11px/1.5 'Libre Franklin',sans-serif;color:#8595a4">Inland Fezzan winds are weak; this site is solar-led. Coastal sites (Darnah, Al Bayda) carry the wind program.</div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- CSP TAB -->
+      <sc-if value="{{ isCsp }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="display:grid;grid-template-columns:1fr 1fr">
+          <div style="padding:13px 18px;border-bottom:1px solid #e4eaef;border-right:1px solid #e4eaef"><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8595a4">DNI</div><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:20px;color:#16202b">7.42<span style="font-size:11px;color:#8595a4"> kWh/m²/d</span></div></div>
+          <div style="padding:13px 18px;border-bottom:1px solid #e4eaef"><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8595a4">Annual DNI</div><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:20px;color:#16202b">2,708<span style="font-size:11px;color:#8595a4"> /yr</span></div></div>
+          <div style="padding:13px 18px;border-bottom:1px solid #e4eaef;border-right:1px solid #e4eaef"><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8595a4">CSP suitability</div><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:20px;color:#1f9d6b">High</div></div>
+          <div style="padding:13px 18px;border-bottom:1px solid #e4eaef"><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8595a4">Storage viable</div><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:20px;color:#16202b">Yes</div></div>
+        </div>
+        <div style="padding:15px 18px">
+          <div style="display:flex;align-items:center;justify-content:space-between;font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7a8794"><span>CSP score</span><span style="font-family:'IBM Plex Mono',monospace;color:#1f9d6b">88 · Strong</span></div>
+          <div style="margin-top:8px;height:8px;border-radius:1px;background:#e4eaef;overflow:hidden"><div style="width:88%;height:100%;background:#103a63"></div></div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- CHARTS TAB -->
+      <sc-if value="{{ isCharts }}" hint-placeholder-val="{{ false }}">
+      <div style="padding:16px 18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px"><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7a8794">Monthly GHI profile</div><div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#a6b3bf">kWh/m²/day</div></div>
+        <div style="display:flex;align-items:flex-end;gap:4px;height:88px">
+          <div style="flex:1;height:50%;background:#b9cfdf"></div><div style="flex:1;height:60%;background:#9cbdd2"></div><div style="flex:1;height:72%;background:#7ba8c4"></div><div style="flex:1;height:84%;background:#5d93b6"></div><div style="flex:1;height:93%;background:#e8821e"></div><div style="flex:1;height:100%;background:#cf5b14"></div><div style="flex:1;height:98%;background:#d96f18"></div><div style="flex:1;height:91%;background:#e8821e"></div><div style="flex:1;height:78%;background:#5d93b6"></div><div style="flex:1;height:64%;background:#7ba8c4"></div><div style="flex:1;height:52%;background:#9cbdd2"></div><div style="flex:1;height:46%;background:#b9cfdf"></div>
+        </div>
+        <div style="display:flex;gap:4px;margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:8px;color:#a6b3bf"><span style="flex:1;text-align:center">J</span><span style="flex:1;text-align:center">F</span><span style="flex:1;text-align:center">M</span><span style="flex:1;text-align:center">A</span><span style="flex:1;text-align:center">M</span><span style="flex:1;text-align:center">J</span><span style="flex:1;text-align:center">J</span><span style="flex:1;text-align:center">A</span><span style="flex:1;text-align:center">S</span><span style="flex:1;text-align:center">O</span><span style="flex:1;text-align:center">N</span><span style="flex:1;text-align:center">D</span></div>
+
+        <div style="margin-top:18px;font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7a8794;margin-bottom:11px">Resource scores</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div><div style="display:flex;justify-content:space-between;font:600 11px 'Libre Franklin',sans-serif;margin-bottom:4px"><span>Solar PV</span><span style="font-family:'IBM Plex Mono',monospace;color:#103a63">94</span></div><div style="height:7px;background:#e4eaef;border-radius:1px;overflow:hidden"><div style="width:94%;height:100%;background:#103a63"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font:600 11px 'Libre Franklin',sans-serif;margin-bottom:4px"><span>CSP</span><span style="font-family:'IBM Plex Mono',monospace;color:#103a63">88</span></div><div style="height:7px;background:#e4eaef;border-radius:1px;overflow:hidden"><div style="width:88%;height:100%;background:#103a63"></div></div></div>
+          <div><div style="display:flex;justify-content:space-between;font:600 11px 'Libre Franklin',sans-serif;margin-bottom:4px"><span>Wind</span><span style="font-family:'IBM Plex Mono',monospace;color:#7d96a8">31</span></div><div style="height:7px;background:#e4eaef;border-radius:1px;overflow:hidden"><div style="width:31%;height:100%;background:#7d96a8"></div></div></div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- FINANCE TAB -->
+      <sc-if value="{{ isFinance }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <div style="padding:14px 18px 6px">
+          <div style="font:700 13px 'Libre Franklin',sans-serif">Gas-displacement analysis</div>
+          <div style="margin-top:3px;font:500 11px/1.5 'Libre Franklin',sans-serif;color:#8595a4">Value of natural gas freed for export by displacing thermal generation. Displaced turbine auto-inferred from nearest GECOL plant.</div>
+        </div>
+
+        <!-- headline -->
+        <div style="margin:8px 18px 0;background:#103a63;border-radius:3px;padding:14px 16px;color:#fff">
+          <div style="font:600 9px 'Libre Franklin',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#9cc0de">Gas freed for export · annual</div>
+          <div style="margin-top:5px;display:flex;align-items:baseline;gap:8px"><span style="font:800 27px/1 'Libre Franklin',sans-serif">{{ exportValue }}</span><span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9cc0de">/ yr at export parity</span></div>
+          <div style="margin-top:8px;display:flex;gap:22px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:#cfe0ee">
+            <div><div style="color:#7fa3c4">Gas volume</div><div style="margin-top:2px;color:#fff">{{ gasFreed }} MMBtu</div></div>
+            <div><div style="color:#7fa3c4">Domestic value</div><div style="margin-top:2px;color:#fff">{{ domesticValue }}</div></div>
+          </div>
+        </div>
+
+        <!-- config -->
+        <div style="padding:14px 18px 4px;display:flex;flex-direction:column;gap:13px">
+          <div>
+            <div style="display:flex;justify-content:space-between;font:600 11px 'Libre Franklin',sans-serif;margin-bottom:6px"><span>Project capacity</span><span style="font-family:'IBM Plex Mono',monospace;color:#103a63">{{ capLabel }}</span></div>
+            <input type="range" min="10" max="1000" step="10" value="{{ capacityMW }}" onInput="{{ onCapacity }}" style="width:100%">
+          </div>
+          <div>
+            <div style="font:600 11px 'Libre Franklin',sans-serif;margin-bottom:6px">Displaced turbine <span style="font-weight:500;color:#8595a4">· nearest: Sabha PS</span></div>
+            <select value="{{ turbineId }}" onChange="{{ onTurbine }}" style="width:100%;height:34px;padding:0 10px;border:1px solid #d3dce4;border-radius:2px;font:500 12px 'Libre Franklin',sans-serif;color:#16202b;background:#f8fafb">
+              <option value="ge-9e">GE Frame 9E (OCGT, E-class)</option>
+              <option value="ge-9f">GE Frame 9F (OCGT, F-class)</option>
+              <option value="siemens-sgt5-2000e">Siemens SGT5-2000E (OCGT, E-class)</option>
+              <option value="siemens-sgt5-4000f">Siemens SGT5-4000F (OCGT, F-class)</option>
+              <option value="ccgt-eclass">CCGT (E-class)</option>
+              <option value="ccgt-fclass">CCGT (F-class)</option>
+              <option value="generic-ocgt">Generic OCGT (older)</option>
+            </select>
+          </div>
+          <div>
+            <div style="display:flex;justify-content:space-between;font:600 11px 'Libre Franklin',sans-serif;margin-bottom:6px"><span>Plant age</span><span style="font-family:'IBM Plex Mono',monospace;color:#103a63">{{ ageLabel }}</span></div>
+            <input type="range" min="0" max="40" step="1" value="{{ ageYears }}" onInput="{{ onAge }}" style="width:100%">
+          </div>
+          <div style="display:flex;gap:14px">
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;font:600 11px 'Libre Franklin',sans-serif;margin-bottom:6px"><span>Domestic</span><span style="font-family:'IBM Plex Mono',monospace;color:#103a63">{{ domLabel }}</span></div>
+              <input type="range" min="0.5" max="5" step="0.1" value="{{ domPrice }}" onInput="{{ onDom }}" style="width:100%">
+            </div>
+            <div style="flex:1">
+              <div style="display:flex;justify-content:space-between;font:600 11px 'Libre Franklin',sans-serif;margin-bottom:6px"><span>Export parity</span><span style="font-family:'IBM Plex Mono',monospace;color:#103a63">{{ expLabel }}</span></div>
+              <input type="range" min="4" max="20" step="0.5" value="{{ expPrice }}" onInput="{{ onExp }}" style="width:100%">
+            </div>
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#a6b3bf">$/MMBtu · warm-season ambient 38 °C · heat rate derated for ambient + vintage</div>
+        </div>
+
+        <!-- result metrics -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #e4eaef;margin-top:8px">
+          <div style="padding:13px 18px;border-bottom:1px solid #e4eaef;border-right:1px solid #e4eaef"><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8595a4">LCOE · solar</div><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:18px;color:#16202b">{{ lcoe }}<span style="font-size:11px;color:#8595a4"> /MWh</span></div></div>
+          <div style="padding:13px 18px;border-bottom:1px solid #e4eaef"><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8595a4">CO₂ avoided</div><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:18px;color:#16202b">{{ co2 }}<span style="font-size:11px;color:#8595a4"> t/yr</span></div></div>
+          <div style="padding:13px 18px;border-bottom:1px solid #e4eaef;border-right:1px solid #e4eaef"><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8595a4">Payback</div><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:18px;color:#16202b">{{ payback }}<span style="font-size:11px;color:#8595a4"> yr</span></div></div>
+          <div style="padding:13px 18px;border-bottom:1px solid #e4eaef"><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#8595a4">Annual yield</div><div style="margin-top:5px;font-family:'IBM Plex Mono',monospace;font-size:18px;color:#16202b">{{ annualGwh }}<span style="font-size:11px;color:#8595a4"> GWh</span></div></div>
+        </div>
+
+        <!-- NPV -->
+        <div style="margin:14px 18px;border:1px solid #103a63;border-radius:3px;padding:13px 16px;display:flex;align-items:center;justify-content:space-between;background:#f4f7f9">
+          <div><div style="font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#7a8794">25-yr NPV · export parity</div><div style="margin-top:3px;font:500 10px 'Libre Franklin',sans-serif;color:#8595a4">8% discount · solar capex $700/kW</div></div>
+          <div style="font:800 24px/1 'Libre Franklin',sans-serif;color:#103a63">{{ npv }}</div>
+        </div>
+      </div>
+      </sc-if>
+
+      <!-- actions -->
+      <div style="margin-top:auto;padding:14px 18px;border-top:1px solid #e4eaef;display:flex;gap:9px">
+        <button style="flex:1;height:36px;border:none;background:#103a63;color:#fff;border-radius:2px;font:600 12px 'Libre Franklin',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 21s-7-5.5-7-11a7 7 0 0114 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>Pin site</button>
+        <button style="flex:1;height:36px;border:1px solid #b9c6d2;background:#fff;color:#16202b;border-radius:2px;font:600 12px 'Libre Franklin',sans-serif;cursor:pointer">Export brief</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ BOTTOM TABLE ============ -->
+  <div style="height:198px;flex:none;border-top:1px solid #b9c6d2;background:#fff;display:flex;flex-direction:column">
+    <div style="height:42px;flex:none;display:flex;align-items:center;gap:14px;padding:0 18px;border-bottom:1px solid #e4eaef">
+      <div style="font:700 13px 'Libre Franklin',sans-serif">Proposed sites</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#fff;background:#103a63;border-radius:10px;padding:1px 8px">{{ rowCount }}</div>
+      <div style="display:flex;gap:6px;margin-left:8px">
+        <span onClick="{{ filterAll }}" style="{{ f.all }}">All</span>
+        <span onClick="{{ filterSolar }}" style="{{ f.solar }}">Solar PV</span>
+        <span onClick="{{ filterWind }}" style="{{ f.wind }}">Wind</span>
+        <span onClick="{{ filterHybrid }}" style="{{ f.hybrid }}">Hybrid</span>
+        <span onClick="{{ filterCsp }}" style="{{ f.csp }}">CSP</span>
+      </div>
+      <div style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:#a6b3bf">sorted by suitability ↓</div>
+    </div>
+    <div style="flex:1;overflow:auto">
+      <div style="display:grid;grid-template-columns:1.7fr 96px 92px 84px 96px 90px 100px 110px;align-items:center;height:30px;padding:0 18px;background:#f4f7f9;border-bottom:1px solid #e4eaef;font:700 9px 'Libre Franklin',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#7a8794">
+        <div>Name</div><div>Type</div><div style="text-align:right">Capacity</div><div style="text-align:right">GHI</div><div style="text-align:right">Cap. factor</div><div style="text-align:right">LCOE</div><div style="text-align:right">Suitability</div><div style="text-align:right">Status</div>
+      </div>
+      <sc-for list="{{ rows }}" as="row" hint-placeholder-count="6">
+        <div style="{{ row.rowStyle }}">
+          <div style="{{ row.nameStyle }}">{{ row.name }}</div>
+          <div style="{{ row.typeStyle }}">{{ row.type }}</div>
+          <div style="text-align:right">{{ row.capacity }}</div>
+          <div style="text-align:right">{{ row.ghi }}</div>
+          <div style="text-align:right">{{ row.cf }}</div>
+          <div style="text-align:right">{{ row.lcoe }}</div>
+          <div style="text-align:right;display:flex;justify-content:flex-end"><span style="{{ row.gradeStyle }}">{{ row.grade }}</span></div>
+          <div style="{{ row.statusStyle }}">{{ row.status }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1492,&quot;height&quot;:978},&quot;defaultTab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;solar&quot;,&quot;wind&quot;,&quot;csp&quot;,&quot;charts&quot;,&quot;finance&quot;],&quot;default&quot;:&quot;finance&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;exportPrice&quot;:{&quot;editor&quot;:&quot;float&quot;,&quot;default&quot;:10,&quot;min&quot;:4,&quot;max&quot;:20,&quot;step&quot;:0.5,&quot;tsType&quot;:&quot;number&quot;},&quot;showSourceStrip&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  constructor(props){
+    super(props);
+    this.state = {
+      activeTab: props.defaultTab || 'finance',
+      libyaMode: true,
+      layers: { satellite:false, solar:true, wind:false, plants:true, proposed:true, grid:false },
+      filter: 'all',
+      capacityMW: 500,
+      turbineId: 'siemens-sgt5-2000e',
+      ageYears: 20,
+      domPrice: 1.0,
+      expPrice: (props.exportPrice != null ? props.exportPrice : 10),
+      cf: 22.9
+    };
+  }
+
+  // ---- ported financial engine (financial.js) ----
+  turbines(){
+    return {
+      'ge-9e':{name:'GE Frame 9E',iso:10800,config:'OCGT'},
+      'ge-9f':{name:'GE Frame 9F',iso:9720,config:'OCGT'},
+      'siemens-sgt5-2000e':{name:'Siemens SGT5-2000E',iso:10200,config:'OCGT'},
+      'siemens-sgt5-4000f':{name:'Siemens SGT5-4000F',iso:9500,config:'OCGT'},
+      'ccgt-eclass':{name:'CCGT (E-class)',iso:7200,config:'CCGT'},
+      'ccgt-fclass':{name:'CCGT (F-class)',iso:6800,config:'CCGT'},
+      'generic-ocgt':{name:'Generic OCGT',iso:11500,config:'OCGT'}
+    };
+  }
+  derate(iso, ambient, age){
+    let hr = iso;
+    if(ambient>15) hr *= 1 + (ambient-15)*0.0035;
+    let ap = 1.0;
+    if(age<=10) ap += age*0.003; else ap += 10*0.003 + (age-10)*0.005;
+    ap = Math.min(ap, 1.15);
+    return hr*ap;
+  }
+  fmtUSD(n){
+    if(n>=1e9) return '$'+(n/1e9).toFixed(2)+'B';
+    if(n>=1e6) return '$'+(n/1e6).toFixed(1)+'M';
+    if(n>=1e3) return '$'+(n/1e3).toFixed(0)+'k';
+    return '$'+Math.round(n);
+  }
+  fmtInt(n){ return Math.round(n).toLocaleString('en-US'); }
+
+  // ---- tab styling ----
+  tabStyle(key){
+    const on = this.state.activeTab===key;
+    const base = "background:none;border:none;cursor:pointer;padding:11px 12px;font:600 12px 'Libre Franklin',sans-serif;border-bottom:2px solid ";
+    return base + (on ? "#103a63;color:#103a63" : "transparent;color:#8595a4");
+  }
+  modeStyle(key){
+    const on = (this.state.libyaMode ? 'libya':'universal')===key;
+    const base = "border:none;cursor:pointer;padding:0 13px;font:600 11px 'Libre Franklin',sans-serif;";
+    return base + (on ? "background:#103a63;color:#fff" : "background:#fff;color:#5a6b7b");
+  }
+  boxStyle(on){
+    return "width:15px;height:15px;border-radius:2px;flex:none;display:flex;align-items:center;justify-content:center;" +
+      (on ? "border:1px solid #103a63;background:#103a63" : "border:1px solid #b9c6d2;background:#fff");
+  }
+  filterStyle(key){
+    const on = this.state.filter===key;
+    const base = "cursor:pointer;font:600 10.5px 'Libre Franklin',sans-serif;border-radius:2px;padding:4px 10px;";
+    return base + (on ? "color:#fff;background:#103a63" : "color:#5a6b7b;border:1px solid #d3dce4");
+  }
+
+  allRows(){
+    const typeColor = { 'Solar PV':'#b5560f','Wind':'#1f6fb2','Hybrid':'#7a5cb2','CSP':'#c08a16' };
+    const data = [
+      {name:'Fezzan Solar Hub',t:'solar',type:'Solar PV',cap:'500 MW',ghi:'7.05',cf:'22.9%',lcoe:'$36',grade:'A · 92',gcol:'#103a63',status:'● Shortlisted',scol:'#1f9d6b',sel:true},
+      {name:'Kufra Deep Desert Solar',t:'solar',type:'Solar PV',cap:'100 MW',ghi:'7.40',cf:'23.6%',lcoe:'$35',grade:'A · 90',gcol:'#1f7d52',status:'○ Screening',scol:'#8595a4'},
+      {name:'Jufra Solar Park',t:'solar',type:'Solar PV',cap:'400 MW',ghi:'6.85',cf:'22.4%',lcoe:'$37',grade:'A · 89',gcol:'#1f7d52',status:'○ Screening',scol:'#8595a4'},
+      {name:'Ghadames CSP Tower',t:'csp',type:'CSP',cap:'150 MW',ghi:'7.42',cf:'—',lcoe:'$92',grade:'A · 88',gcol:'#1f7d52',status:'○ Screening',scol:'#8595a4'},
+      {name:'Misrata Peri-Urban Solar',t:'solar',type:'Solar PV',cap:'200 MW',ghi:'5.75',cf:'19.0%',lcoe:'$42',grade:'B · 81',gcol:'#3b6a96',status:'● Shortlisted',scol:'#1f9d6b'},
+      {name:'Darnah Coastal Wind Farm',t:'wind',type:'Wind',cap:'120 MW',ghi:'—',cf:'34.8%',lcoe:'$58',grade:'B · 79',gcol:'#3b6a96',status:'○ Screening',scol:'#8595a4'},
+      {name:'Gulf of Sirte Hybrid Park',t:'hybrid',type:'Hybrid',cap:'250 MW',ghi:'6.50',cf:'28.0%',lcoe:'$48',grade:'B · 77',gcol:'#3b6a96',status:'● On hold',scol:'#c0392b'},
+      {name:'Al Bayda Highland Wind',t:'wind',type:'Wind',cap:'100 MW',ghi:'—',cf:'31.5%',lcoe:'$61',grade:'B · 74',gcol:'#3b6a96',status:'○ Screening',scol:'#8595a4'}
+    ];
+    return data.map(d=>{
+      const sel = !!d.sel;
+      return {
+        name:d.name, type:d.type, capacity:d.cap, ghi:d.ghi, cf:d.cf, lcoe:d.lcoe, grade:d.grade, status:d.status,
+        rowStyle:"display:grid;grid-template-columns:1.7fr 96px 92px 84px 96px 90px 100px 110px;align-items:center;height:34px;padding:0 18px;border-bottom:1px solid #eef2f5;font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:#1a2733;" + (sel?"background:#f0f6fb":""),
+        nameStyle:"font-family:'Libre Franklin',sans-serif;font-weight:600;" + (sel?"color:#103a63":"color:#1a2733"),
+        typeStyle:"font-family:'Libre Franklin',sans-serif;font-size:10.5px;color:"+typeColor[d.type],
+        gradeStyle:"font-family:'Libre Franklin',sans-serif;font-weight:700;font-size:10px;color:#fff;border-radius:2px;padding:1px 7px;background:"+d.gcol,
+        statusStyle:"text-align:right;font-family:'Libre Franklin',sans-serif;font-size:10.5px;color:"+d.scol,
+        _t:d.t
+      };
+    });
+  }
+
+  renderVals(){
+    const s = this.state;
+    const T = this.turbines()[s.turbineId] || this.turbines()['generic-ocgt'];
+    const annualMWh = s.capacityMW * 8760 * (s.cf/100);
+    const hr = this.derate(T.iso, 38, s.ageYears);
+    const gasMMBtu = annualMWh*1000*hr/1e6;
+    const co2 = gasMMBtu*53.07/1000;
+    const domesticValue = gasMMBtu*s.domPrice;
+    const exportValue = gasMMBtu*s.expPrice;
+    // LCOE solar
+    const capacityKW = s.capacityMW*1000;
+    const capex = 700*capacityKW, opex = 10*capacityKW, r=0.08, n=25;
+    const crf = (r*Math.pow(1+r,n))/(Math.pow(1+r,n)-1);
+    const lcoe = (capex*crf + opex)/annualMWh;
+    // NPV export parity
+    const cash = exportValue - opex;
+    let npv = -capex;
+    for(let y=1;y<=n;y++) npv += cash/Math.pow(1+r,y);
+    const payback = cash>0 ? capex/cash : null;
+
+    const rows = this.allRows().filter(row => s.filter==='all' || row._t===s.filter);
+
+    return {
+      // state flags
+      isSolar: s.activeTab==='solar', isWind: s.activeTab==='wind', isCsp: s.activeTab==='csp',
+      isCharts: s.activeTab==='charts', isFinance: s.activeTab==='finance' && s.libyaMode,
+      libyaMode: s.libyaMode,
+      showStrip: this.props.showSourceStrip !== false,
+      layers: s.layers,
+      box: {
+        satellite:this.boxStyle(s.layers.satellite), solar:this.boxStyle(s.layers.solar),
+        wind:this.boxStyle(s.layers.wind), plants:this.boxStyle(s.layers.plants),
+        proposed:this.boxStyle(s.layers.proposed), grid:this.boxStyle(s.layers.grid)
+      },
+      t: { solar:this.tabStyle('solar'), wind:this.tabStyle('wind'), csp:this.tabStyle('csp'), charts:this.tabStyle('charts'), finance:this.tabStyle('finance') },
+      modeLibyaStyle:this.modeStyle('libya'), modeUniversalStyle:this.modeStyle('universal'),
+      f: { all:this.filterStyle('all'), solar:this.filterStyle('solar'), wind:this.filterStyle('wind'), hybrid:this.filterStyle('hybrid'), csp:this.filterStyle('csp') },
+      // finance display
+      exportValue:this.fmtUSD(exportValue),
+      domesticValue:this.fmtUSD(domesticValue),
+      gasFreed:this.fmtInt(gasMMBtu),
+      lcoe:'$'+lcoe.toFixed(0),
+      co2:this.fmtInt(co2),
+      payback: payback ? payback.toFixed(1) : '—',
+      npv:this.fmtUSD(npv),
+      annualGwh:this.fmtInt(annualMWh/1000),
+      capLabel:s.capacityMW+' MW',
+      ageLabel:s.ageYears+' yrs',
+      domLabel:'$'+s.domPrice.toFixed(2),
+      expLabel:'$'+s.expPrice.toFixed(2),
+      capacityMW:s.capacityMW, turbineId:s.turbineId, ageYears:s.ageYears, domPrice:s.domPrice, expPrice:s.expPrice,
+      // table
+      rows, rowCount: rows.length,
+      // handlers
+      tabSolar:()=>this.setState({activeTab:'solar'}),
+      tabWind:()=>this.setState({activeTab:'wind'}),
+      tabCsp:()=>this.setState({activeTab:'csp'}),
+      tabCharts:()=>this.setState({activeTab:'charts'}),
+      tabFinance:()=>this.setState({activeTab:'finance'}),
+      setLibya:()=>this.setState({libyaMode:true}),
+      setUniversal:()=>this.setState(st=>({libyaMode:false, activeTab: st.activeTab==='finance'?'solar':st.activeTab})),
+      toggleSatellite:()=>this.setState(st=>({layers:{...st.layers,satellite:!st.layers.satellite}})),
+      toggleSolar:()=>this.setState(st=>({layers:{...st.layers,solar:!st.layers.solar}})),
+      toggleWind:()=>this.setState(st=>({layers:{...st.layers,wind:!st.layers.wind}})),
+      togglePlants:()=>this.setState(st=>({layers:{...st.layers,plants:!st.layers.plants}})),
+      toggleProposed:()=>this.setState(st=>({layers:{...st.layers,proposed:!st.layers.proposed}})),
+      toggleGrid:()=>this.setState(st=>({layers:{...st.layers,grid:!st.layers.grid}})),
+      filterAll:()=>this.setState({filter:'all'}),
+      filterSolar:()=>this.setState({filter:'solar'}),
+      filterWind:()=>this.setState({filter:'wind'}),
+      filterHybrid:()=>this.setState({filter:'hybrid'}),
+      filterCsp:()=>this.setState({filter:'csp'}),
+      onCapacity:(e)=>this.setState({capacityMW:+e.target.value}),
+      onTurbine:(e)=>this.setState({turbineId:e.target.value}),
+      onAge:(e)=>this.setState({ageYears:+e.target.value}),
+      onDom:(e)=>this.setState({domPrice:+e.target.value}),
+      onExp:(e)=>this.setState({expPrice:+e.target.value})
+    };
+  }
+}
+</script>
+</body>
+</html>
