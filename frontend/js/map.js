@@ -11,7 +11,9 @@ HelioScout.Map = (function() {
     let layers = {
         plants: null,
         proposed: null,
-        grid: null
+        grid: null,
+        transmission: null,
+        populationCentres: null
     };
 
     // Callback when map is clicked
@@ -58,6 +60,8 @@ HelioScout.Map = (function() {
         layers.plants = L.layerGroup().addTo(map);
         layers.proposed = L.layerGroup().addTo(map);
         layers.grid = L.layerGroup(); // Not added by default
+        layers.transmission = L.layerGroup();      // Toggled on demand
+        layers.populationCentres = L.layerGroup();  // Toggled with the heatmap
 
         // Global-Solar-Atlas-style irradiance overlay (data-driven canvas raster).
         // Built from a precomputed NASA POWER GHI grid and shaded with the GSA
@@ -73,6 +77,13 @@ HelioScout.Map = (function() {
         if (HelioScout.WindOverlay) {
             HelioScout.WindOverlay.load(map).catch((err) =>
                 console.error('[Map] Wind overlay failed to load:', err)
+            );
+        }
+
+        // Population-density heatmap (same raster engine; fades over empty desert).
+        if (HelioScout.PopulationOverlay) {
+            HelioScout.PopulationOverlay.load(map).catch((err) =>
+                console.error('[Map] Population overlay failed to load:', err)
             );
         }
 
@@ -163,6 +174,15 @@ HelioScout.Map = (function() {
                 if (HelioScout.WindOverlay) HelioScout.WindOverlay.toggle(show);
                 return;
             }
+            // Population heatmap raster + its labelled centres travel together.
+            if (layerName === 'populationHeatmap') {
+                if (HelioScout.PopulationOverlay) HelioScout.PopulationOverlay.toggle(show);
+                if (layers.populationCentres) {
+                    if (show) layers.populationCentres.addTo(map);
+                    else map.removeLayer(layers.populationCentres);
+                }
+                return;
+            }
 
             if (!layers[layerName]) return;
 
@@ -236,6 +256,80 @@ HelioScout.Map = (function() {
         },
 
         /**
+         * Render the existing HV transmission network (GeoJSON: lines + substations).
+         * Lines are coloured/weighted by voltage class; substations are square
+         * connection-node markers. Called by js/transmission.js after it loads.
+         */
+        renderTransmission(geojson) {
+            if (!layers.transmission) return;
+            layers.transmission.clearLayers();
+
+            // Voltage → colour/weight (higher voltage = bolder line).
+            function lineStyle(v) {
+                if (v >= 400) return { color: '#ef4444', weight: 3.0, opacity: 0.9 };
+                if (v >= 220) return { color: '#f59e0b', weight: 2.4, opacity: 0.9 };
+                if (v >= 132) return { color: '#eab308', weight: 1.8, opacity: 0.85 };
+                return { color: '#94a3b8', weight: 1.3, opacity: 0.8 };
+            }
+
+            const geoLayer = L.geoJSON(geojson, {
+                filter: (f) => f.properties && f.properties.kind === 'line',
+                style: (f) => lineStyle(f.properties.voltage || 0),
+                onEachFeature: (f, lyr) => {
+                    const p = f.properties || {};
+                    lyr.bindPopup(
+                        `<strong>${p.name || 'Transmission line'}</strong><br>` +
+                        `<span style="font-size:11px;color:#94a3b8;">${p.voltage ? p.voltage + ' kV' : 'voltage n/a'}` +
+                        `${p.operator ? ' · ' + p.operator : ''}</span>`
+                    );
+                }
+            });
+            layers.transmission.addLayer(geoLayer);
+
+            // Substation nodes as small squares.
+            (geojson.features || []).forEach((f) => {
+                if (!f.properties || f.properties.kind !== 'substation') return;
+                const [lon, lat] = f.geometry.coordinates;
+                const v = f.properties.voltage || 0;
+                const color = v >= 400 ? '#ef4444' : (v >= 220 ? '#f59e0b' : '#eab308');
+                const icon = L.divIcon({
+                    className: 'substation-div-icon',
+                    html: `<div class="substation-marker" style="border-color:${color};"></div>`,
+                    iconSize: [10, 10],
+                    iconAnchor: [5, 5]
+                });
+                const marker = L.marker([lat, lon], { icon }).bindPopup(
+                    `<strong>${f.properties.name || 'Substation'}</strong><br>` +
+                    `<span style="font-size:11px;color:#94a3b8;">${v ? v + ' kV substation' : 'substation'}</span>`
+                );
+                layers.transmission.addLayer(marker);
+            });
+        },
+
+        /**
+         * Render labelled population centres (scaled by population). Shown together
+         * with the population heatmap toggle.
+         */
+        renderPopulationCentres(cities) {
+            if (!layers.populationCentres) return;
+            layers.populationCentres.clearLayers();
+            (cities || []).forEach((c) => {
+                const radius = Math.max(4, Math.min(20, Math.sqrt(c.population) / 90));
+                const marker = L.circleMarker([c.lat, c.lon], {
+                    radius,
+                    color: '#fca5a5',
+                    weight: 1,
+                    fillColor: '#ef4444',
+                    fillOpacity: 0.35
+                }).bindTooltip(
+                    `${c.name} — ${(c.population / 1000).toFixed(0)}k`,
+                    { direction: 'top', className: 'pop-centre-tooltip' }
+                );
+                layers.populationCentres.addLayer(marker);
+            });
+        },
+
+        /**
          * Add an ISO-compliant map legend control to the bottom-left corner.
          * The legend documents every marker symbol used on the map.
          */
@@ -286,6 +380,25 @@ HelioScout.Map = (function() {
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="7" cy="8" r="2.5"/><line x1="7" y1="3" x2="7" y2="5"/><line x1="7" y1="11" x2="7" y2="13"/><line x1="2" y1="8" x2="4" y2="8"/><line x1="10" y1="8" x2="12" y2="8"/><circle cx="18" cy="10" r="1" fill="currentColor" stroke="none"/><line x1="18" y1="9" x2="18" y2="5"/><line x1="16.7" y1="10.75" x2="14" y2="12.5"/><line x1="19.3" y1="10.75" x2="22" y2="12.5"/><line x1="18" y1="11" x2="18" y2="21"/></svg>
                                 </span>
                                 Hybrid
+                            </div>
+                        </div>
+                        <div class="map-legend__section">
+                            <div class="map-legend__title">Transmission Network (OSM)</div>
+                            <div class="map-legend__item">
+                                <span class="map-legend__line" style="background:#ef4444;"></span>
+                                400 kV+
+                            </div>
+                            <div class="map-legend__item">
+                                <span class="map-legend__line" style="background:#f59e0b;"></span>
+                                220 kV
+                            </div>
+                            <div class="map-legend__item">
+                                <span class="map-legend__line" style="background:#eab308;"></span>
+                                66–150 kV
+                            </div>
+                            <div class="map-legend__item">
+                                <span class="map-legend__marker map-legend__marker--substation"></span>
+                                Substation
                             </div>
                         </div>
                         <div class="map-legend__section">

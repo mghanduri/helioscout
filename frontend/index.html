@@ -102,6 +102,16 @@
                             <span class="toggle-track"><span class="toggle-thumb"></span></span>
                             <span class="toggle-label">Wind Speed</span>
                         </label>
+                        <label class="layer-toggle" id="toggle-transmission">
+                            <input type="checkbox" name="layer" value="transmission">
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <span class="toggle-label">Transmission Grid</span>
+                        </label>
+                        <label class="layer-toggle" id="toggle-populationHeatmap">
+                            <input type="checkbox" name="layer" value="populationHeatmap">
+                            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+                            <span class="toggle-label">Population Density</span>
+                        </label>
                     </div>
                 </div>
 
@@ -405,6 +415,11 @@
                                 <input type="range" id="fin-export-price" min="4" max="20" value="10" step="0.5">
                                 <span class="range-value" id="fin-export-price-val">$10.00</span>
                             </div>
+                            <div class="config-group">
+                                <label for="fin-tx-cost-per-km">New Line Cost ($/km)</label>
+                                <input type="range" id="fin-tx-cost-per-km" min="150000" max="1000000" value="450000" step="10000">
+                                <span class="range-value" id="fin-tx-cost-per-km-val">$450k/km</span>
+                            </div>
                         </div>
 
                         <div class="financial-results" id="financial-results">
@@ -444,6 +459,59 @@
                                 <div class="npv-label">25-Year NPV (Export-Parity)</div>
                                 <div class="npv-value" id="fin-npv">—</div>
                                 <div class="npv-range text-muted" id="fin-npv-range"></div>
+                            </div>
+
+                            <!-- Grid connection & delivered LCOE -->
+                            <h4 class="financial-subhead">Grid Connection &amp; Delivered LCOE</h4>
+                            <p class="text-muted" style="margin:-4px 0 10px; font-size:12px;">Distance to the existing transmission network (OpenStreetMap) drives the new-line cost, annualised onto the generation LCOE.</p>
+                            <div class="metric-grid">
+                                <div class="metric-card">
+                                    <div class="metric-label">Distance to Grid</div>
+                                    <div class="metric-value" id="fin-grid-distance">—</div>
+                                    <div class="metric-unit">km to nearest line</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-label">Nearest Line</div>
+                                    <div class="metric-value" id="fin-grid-voltage">—</div>
+                                    <div class="metric-unit">voltage class</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-label">Connection CapEx</div>
+                                    <div class="metric-value" id="fin-tx-capex">—</div>
+                                    <div class="metric-unit">line + substation bay</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-label">Transmission Adder</div>
+                                    <div class="metric-value" id="fin-lcoe-adder">—</div>
+                                    <div class="metric-unit">USD/MWh</div>
+                                </div>
+                                <div class="metric-card financial-accent">
+                                    <div class="metric-label">Delivered LCOE</div>
+                                    <div class="metric-value" id="fin-lcoe-delivered">—</div>
+                                    <div class="metric-unit">USD/MWh (incl. grid)</div>
+                                </div>
+                            </div>
+
+                            <!-- Site feasibility (land / space constraints) -->
+                            <h4 class="financial-subhead">Site Feasibility &amp; Indicative Size</h4>
+                            <div class="feasibility-panel">
+                                <div class="feasibility-header">
+                                    <span class="feas-badge" id="feas-badge">—</span>
+                                    <span class="text-muted" style="font-size:12px;">Pop. density: <strong id="feas-density">—</strong> persons/km²</span>
+                                </div>
+                                <p class="feas-note text-muted" id="feas-note"></p>
+                                <div class="metric-grid">
+                                    <div class="metric-card">
+                                        <div class="metric-label">Indicative Max Size</div>
+                                        <div class="metric-value" id="feas-max-size">—</div>
+                                        <div class="metric-unit">MW (10 km² parcel)</div>
+                                    </div>
+                                    <div class="metric-card">
+                                        <div class="metric-label">Indicative Output</div>
+                                        <div class="metric-value" id="feas-max-output">—</div>
+                                        <div class="metric-unit">GWh/year</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -549,7 +617,9 @@
     <script src="js/raster-overlay.js"></script>
     <script src="js/solar-overlay.js"></script>
     <script src="js/wind-overlay.js"></script>
+    <script src="js/population-overlay.js"></script>
     <script src="js/map.js"></script>
+    <script src="js/transmission.js"></script>
     <script src="js/compare.js"></script>
     <script src="js/proposals.js"></script>
     <script src="js/reconciliation.js"></script>

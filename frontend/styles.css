@@ -896,6 +896,52 @@ input[type="range"]::-webkit-slider-thumb:hover { box-shadow: 0 0 0 6px var(--fi
 .npv-label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: var(--space-sm); }
 .npv-value { font-size: 32px; font-weight: 800; color: var(--financial-500); font-variant-numeric: tabular-nums; letter-spacing: -1px; }
 
+/* Sub-section headings inside the Financial tab */
+.financial-subhead {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    margin: var(--space-lg) 0 var(--space-sm);
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--glass-border);
+}
+
+/* Site feasibility (land / space constraints) */
+.feasibility-panel { margin-top: var(--space-sm); }
+.feasibility-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+.feas-note { font-size: 12px; margin-bottom: var(--space-sm); }
+.feas-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid transparent;
+}
+.feas-badge--feasible {
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.35);
+}
+.feas-badge--constrained {
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.35);
+}
+.feas-badge--infeasible {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.35);
+}
+
 /* Assessment Actions */
 #assessment-actions {
     display: flex;
@@ -1505,6 +1551,41 @@ input[type="range"]::-webkit-slider-thumb:hover { box-shadow: 0 0 0 6px var(--fi
     transform: rotate(-45deg);
     border-color: #64748b;
     background: rgba(100, 116, 139, 0.4);
+}
+
+/* Transmission line swatch + substation node (legend) */
+.map-legend__line {
+    width: 16px;
+    height: 3px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    align-self: center;
+}
+.map-legend__marker--substation {
+    width: 9px;
+    height: 9px;
+    border-radius: 2px;
+    border: 2px solid #f59e0b;
+    background: rgba(245, 158, 11, 0.25);
+}
+
+/* Transmission substation node marker (on map) */
+.substation-marker {
+    width: 8px;
+    height: 8px;
+    border: 2px solid #f59e0b;
+    background: rgba(15, 23, 42, 0.85);
+    border-radius: 2px;
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+}
+
+/* Population-centre label tooltip */
+.pop-centre-tooltip {
+    background: var(--glass-bg, rgba(15, 23, 42, 0.85));
+    border: 1px solid var(--glass-border, rgba(148, 163, 184, 0.3));
+    color: var(--text-primary, #e2e8f0);
+    font-size: 11px;
+    font-weight: 600;
 }
 
 /* --- Resource gradient legend (Global Solar/Wind Atlas style) --- */

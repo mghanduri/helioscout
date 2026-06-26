@@ -115,6 +115,28 @@
     }
   },
 
+  "grid": {
+    "landPowerDensityMWPerKm2": {
+      "value": 35,
+      "source": "Utility-scale fixed-tilt PV total-area land use (~7 acres/MW ⇒ ~35 MW/km²), NREL 'Land-Use Requirements for Solar Power Plants in the United States' (TP-6A20-56290). Owner to confirm packing factor for Libyan sites.",
+      "asOf": "2026-06-26"
+    },
+    "transmission": {
+      "costPerKmByVoltageUSD": { "400": 800000, "220": 450000, "132": 320000, "66": 220000 },
+      "costPerKmDefaultUSD": 400000,
+      "fixedConnectionCostUSD": 3000000,
+      "source": "UNSOURCED — indicative greenfield HV overhead line cost (USD/km) by voltage and a fixed substation-bay interconnection cost, flat/desert terrain (order-of-magnitude, World Bank / utility transmission-planning ranges). Owner to confirm current figures for Libya/GECOL.",
+      "asOf": "2026-06-26"
+    },
+    "populationFeasibility": {
+      "constrainedThreshold": 150,
+      "infeasibleThreshold": 400,
+      "unit": "persons/km2",
+      "source": "Heuristic land/space-constraint bands applied to the modelled population-density field: above the infeasible threshold a site is treated as built-up with no contiguous open land for a utility-scale farm; the constrained band flags peri-urban siting risk. Owner to calibrate against land-cover data.",
+      "asOf": "2026-06-26"
+    }
+  },
+
   "reconciliation": {
     "mmbtuPerBcf": 1037000,
     "nationalBcf": {

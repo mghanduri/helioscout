@@ -89,7 +89,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         finNpv: document.getElementById('fin-npv'),
         finNpvRange: document.getElementById('fin-npv-range'),
         finBasis: document.getElementById('fin-basis'),
-        provenanceBody: document.getElementById('provenance-body')
+        provenanceBody: document.getElementById('provenance-body'),
+
+        // Grid-connection & delivered LCOE
+        finTxCostPerKm: document.getElementById('fin-tx-cost-per-km'),
+        finTxCostPerKmVal: document.getElementById('fin-tx-cost-per-km-val'),
+        finGridDistance: document.getElementById('fin-grid-distance'),
+        finGridVoltage: document.getElementById('fin-grid-voltage'),
+        finTxCapex: document.getElementById('fin-tx-capex'),
+        finLcoeAdder: document.getElementById('fin-lcoe-adder'),
+        finLcoeDelivered: document.getElementById('fin-lcoe-delivered'),
+
+        // Site feasibility (land / space constraints)
+        feasBadge: document.getElementById('feas-badge'),
+        feasDensity: document.getElementById('feas-density'),
+        feasNote: document.getElementById('feas-note'),
+        feasMaxSize: document.getElementById('feas-max-size'),
+        feasMaxOutput: document.getElementById('feas-max-output')
     };
 
     // State
@@ -132,11 +148,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         HelioScout.Map.renderPlants(plants);
         HelioScout.Map.renderProposedSites(proposals);
-        
+
         renderProposalsList(proposals);
-        
+
     } catch (e) {
         console.error("Failed to load initial data:", e);
+    }
+
+    // Load the existing transmission network (renders itself via Map.renderTransmission).
+    if (HelioScout.Transmission) {
+        HelioScout.Transmission.load().catch((e) =>
+            console.error('Failed to load transmission network:', e)
+        );
+    }
+    // Render labelled population centres from the population grid's city list.
+    if (HelioScout.PopulationOverlay) {
+        // The grid + cities load asynchronously; poll briefly until ready, then render.
+        let centreTries = 0;
+        const renderCentres = () => {
+            const g = HelioScout.PopulationOverlay.getGrid();
+            if (g && g.cities && g.cities.length) {
+                HelioScout.Map.renderPopulationCentres(g.cities);
+            } else if (centreTries++ < 25) {
+                setTimeout(renderCentres, 400);
+            }
+        };
+        renderCentres();
     }
     
     // Hide Loading Screen
@@ -399,13 +436,73 @@ document.addEventListener('DOMContentLoaded', async () => {
                 `Range (export price ±${pctLabel}%): ${m(sens.low)} … ${m(sens.high)}`;
         }
 
+        // ── Grid connection & delivered LCOE ──────────────────────────────
+        // Distance to the existing transmission network sets the new-line cost,
+        // which we annualise and add to the bare-generation LCOE.
+        let tx = null, grid = null;
+        if (HelioScout.Transmission && HelioScout.Transmission.isReady()) {
+            grid = HelioScout.Transmission.getNearestTransmission(
+                currentState.currentLat, currentState.currentLon
+            );
+        }
+        if (grid) {
+            const costPerKm = els.finTxCostPerKm
+                ? parseFloat(els.finTxCostPerKm.value)
+                : HelioScout.Financial.txCostPerKmFor(grid.voltage);
+            tx = HelioScout.Financial.calculateTransmission({
+                distanceKm: grid.distanceKm,
+                voltage: grid.voltage,
+                costPerKm: costPerKm,
+                annualMWh: pvLcoe.annualMWh,
+                lcoeBase: pvLcoe.lcoe
+            });
+
+            if (els.finGridDistance) els.finGridDistance.textContent = grid.distanceKm.toFixed(1);
+            if (els.finGridVoltage) els.finGridVoltage.textContent = grid.voltage ? grid.voltage + ' kV' : 'n/a';
+            if (els.finTxCapex) els.finTxCapex.textContent = '$' + (tx.transmissionCapex / 1e6).toFixed(1) + 'M';
+            if (els.finLcoeAdder) els.finLcoeAdder.textContent = '+' + tx.lcoeAdder.toFixed(2);
+            if (els.finLcoeDelivered) els.finLcoeDelivered.textContent = tx.lcoeDelivered.toFixed(2);
+        }
+
+        // ── Site feasibility (land / space constraints) ───────────────────
+        let feas = null, popDensity = null, sizing = null;
+        if (HelioScout.PopulationOverlay) {
+            popDensity = HelioScout.PopulationOverlay.sampleAt(
+                currentState.currentLat, currentState.currentLon
+            );
+        }
+        if (popDensity != null) {
+            feas = HelioScout.Financial.classifyFeasibility(popDensity);
+            // Indicative max size for a nominal 10 km² open parcel at this site.
+            sizing = HelioScout.Financial.estimateFarmSize({
+                availableAreaKm2: 10,
+                capacityFactorPercent: a.solar.capacityFactor
+            });
+
+            if (els.feasBadge) {
+                els.feasBadge.textContent = feas.label;
+                els.feasBadge.className = 'feas-badge feas-badge--' + feas.level;
+            }
+            if (els.feasDensity) els.feasDensity.textContent = Math.round(popDensity).toLocaleString();
+            if (els.feasNote) els.feasNote.textContent = feas.note;
+            const suppress = feas.level === 'infeasible';
+            if (els.feasMaxSize) els.feasMaxSize.textContent = suppress ? '—' : Math.round(sizing.maxCapacityMW).toLocaleString();
+            if (els.feasMaxOutput) els.feasMaxOutput.textContent = suppress ? '—' : sizing.annualOutputGWh.toFixed(0);
+        }
+
         // Cache a compact summary for the Compare feature
         currentState.financialSummary = {
             lcoeSolar: pvLcoe.lcoe,
             gasDisplacement: disp.gasFreedMMBtu,   // MMBtu/yr
             gasValue: disp.exportValue / 1e6,       // $M/yr (export-parity)
             npv: npv.npv,
-            paybackYears: npv.paybackYears
+            paybackYears: npv.paybackYears,
+            gridDistanceKm: grid ? grid.distanceKm : null,
+            gridVoltage: grid ? grid.voltage : null,
+            transmissionCapex: tx ? tx.transmissionCapex : null,
+            lcoeDelivered: tx ? tx.lcoeDelivered : null,
+            feasibility: feas ? feas.level : null,
+            popDensity: popDensity
         };
     }
 
@@ -441,7 +538,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             financial: (currentState.mode === 'libya' && fin) ? {
                 lcoeSolar: fin.lcoeSolar,
                 gasDisplacement: fin.gasDisplacement,
-                gasValue: fin.gasValue
+                gasValue: fin.gasValue,
+                lcoeDelivered: fin.lcoeDelivered,
+                gridDistanceKm: fin.gridDistanceKm,
+                transmissionCapex: fin.transmissionCapex,
+                feasibility: fin.feasibility
             } : null
         };
     }
@@ -550,6 +651,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             rows.push(['LCOE Solar ($/MWh)', rec.financial.lcoeSolar.toFixed(2)]);
             rows.push(['Gas Freed (MMBtu/yr)', Math.round(rec.financial.gasDisplacement)]);
             rows.push(['Gas Value Export ($M/yr)', rec.financial.gasValue.toFixed(2)]);
+            if (rec.financial.gridDistanceKm != null)
+                rows.push(['Distance to Grid (km)', rec.financial.gridDistanceKm.toFixed(1)]);
+            if (rec.financial.lcoeDelivered != null)
+                rows.push(['Delivered LCOE ($/MWh)', rec.financial.lcoeDelivered.toFixed(2)]);
+            if (rec.financial.transmissionCapex != null)
+                rows.push(['Connection CapEx ($M)', (rec.financial.transmissionCapex / 1e6).toFixed(1)]);
+            if (rec.financial.feasibility)
+                rows.push(['Land Feasibility', rec.financial.feasibility]);
         }
         const csv = rows.map(r => r.map(c => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -697,6 +806,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     
     els.finTurbine.addEventListener('change', updateFinancials);
+
+    // New-line cost slider ($/km) for the delivered-LCOE calculation.
+    if (els.finTxCostPerKm) {
+        els.finTxCostPerKm.addEventListener('input', (e) => {
+            const v = parseFloat(e.target.value);
+            if (els.finTxCostPerKmVal) {
+                els.finTxCostPerKmVal.textContent = '$' + Math.round(v / 1000) + 'k/km';
+            }
+            updateFinancials();
+        });
+    }
 
     // Filter Proposals
     document.querySelectorAll('.filter-tab').forEach(btn => {

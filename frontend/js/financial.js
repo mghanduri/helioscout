@@ -15,6 +15,29 @@ HelioScout.Financial = (function() {
         return HelioScout.requireAssumptions().financial;
     }
 
+    // Grid-connection & land-use assumptions (transmission cost, PV land power
+    // density, population feasibility bands) — same dated/sourced register.
+    function grid() {
+        return HelioScout.requireAssumptions().grid;
+    }
+
+    /** Capital recovery factor — same form as calculateLCOE (r(1+r)^n / ((1+r)^n − 1)). */
+    function capitalRecoveryFactor(discountRate, lifeYears) {
+        return (discountRate * Math.pow(1 + discountRate, lifeYears)) /
+            (Math.pow(1 + discountRate, lifeYears) - 1);
+    }
+
+    /** Pick the benchmarked $/km for a line voltage (kV) from the register. */
+    function txCostPerKmFor(voltage) {
+        const tx = grid().transmission;
+        if (voltage == null) return tx.costPerKmDefaultUSD;
+        const tiers = [400, 220, 132, 66];
+        for (const tier of tiers) {
+            if (voltage >= tier) return tx.costPerKmByVoltageUSD[String(tier)];
+        }
+        return tx.costPerKmByVoltageUSD['66'];
+    }
+
     /**
      * Derate turbine heat rate based on ambient temperature and age
      * Gas turbines lose efficiency in heat and over time. Coefficients are
@@ -194,6 +217,98 @@ HelioScout.Financial = (function() {
                 high: npvAt(prices.high),
                 prices,
                 pct
+            };
+        },
+
+        /** Default $/km for a nearest-line voltage (exposed for the UI). */
+        txCostPerKmFor(voltage) {
+            return txCostPerKmFor(voltage);
+        },
+
+        /**
+         * Cost and LCOE impact of building a new line to reach the grid.
+         * The transmission CapEx is annualised at the same discount rate / PV
+         * life as calculateLCOE and spread over the plant's annual generation,
+         * giving a $/MWh adder on top of the bare generation LCOE.
+         *
+         * @param {Object} o
+         * @param {number} o.distanceKm        distance to nearest line (km)
+         * @param {number} o.annualMWh          plant annual generation (MWh)
+         * @param {number} [o.costPerKm]        override $/km (else from register/voltage)
+         * @param {number|null} [o.voltage]     nearest-line voltage (kV) for default $/km
+         * @param {number} [o.lcoeBase]         bare-generation LCOE (USD/MWh) to add to
+         * @returns {{transmissionCapex, lineCost, fixedConnectionCost, costPerKm,
+         *           lcoeAdder, lcoeDelivered}}
+         */
+        calculateTransmission(o) {
+            const tx = grid().transmission;
+            const F = fin();
+            const costPerKm = (o.costPerKm != null) ? o.costPerKm : txCostPerKmFor(o.voltage);
+            const fixedConnectionCost = tx.fixedConnectionCostUSD;
+
+            const lineCost = Math.max(0, o.distanceKm) * costPerKm;
+            const transmissionCapex = lineCost + fixedConnectionCost;
+
+            // Annualise over PV life at the register discount rate (same basis as LCOE).
+            const discountRate = F.discountRate.value;
+            const lifeYears = (F.tech.solar && F.tech.solar.lifeYears) || 25;
+            const crf = capitalRecoveryFactor(discountRate, lifeYears);
+
+            const lcoeAdder = (o.annualMWh > 0)
+                ? (transmissionCapex * crf) / o.annualMWh
+                : 0;
+            const lcoeDelivered = (o.lcoeBase != null) ? o.lcoeBase + lcoeAdder : null;
+
+            return {
+                transmissionCapex,
+                lineCost,
+                fixedConnectionCost,
+                costPerKm,
+                lcoeAdder,
+                lcoeDelivered
+            };
+        },
+
+        /**
+         * Indicative max farm size and output for a parcel of open land.
+         * @param {Object} o
+         * @param {number} o.availableAreaKm2        buildable open area (km²)
+         * @param {number} o.capacityFactorPercent   PV capacity factor (%)
+         * @returns {{maxCapacityMW, annualOutputGWh, densityMWPerKm2}}
+         */
+        estimateFarmSize(o) {
+            const density = grid().landPowerDensityMWPerKm2.value;
+            const maxCapacityMW = Math.max(0, o.availableAreaKm2) * density;
+            const annualOutputGWh = maxCapacityMW * 8760 * (o.capacityFactorPercent / 100) / 1000;
+            return { maxCapacityMW, annualOutputGWh, densityMWPerKm2: density };
+        },
+
+        /**
+         * Land/space-constraint verdict from modelled population density.
+         * @param {number} densityPersonsKm2
+         * @returns {{level:'feasible'|'constrained'|'infeasible', label, note}}
+         */
+        classifyFeasibility(densityPersonsKm2) {
+            const pf = grid().populationFeasibility;
+            const d = densityPersonsKm2 || 0;
+            if (d >= pf.infeasibleThreshold) {
+                return {
+                    level: 'infeasible',
+                    label: 'Not feasible — built-up area',
+                    note: 'Population density indicates developed/urban land with no contiguous open space for a utility-scale farm.'
+                };
+            }
+            if (d >= pf.constrainedThreshold) {
+                return {
+                    level: 'constrained',
+                    label: 'Constrained — peri-urban',
+                    note: 'Some settlement nearby; siting is possible but land assembly and setbacks need care.'
+                };
+            }
+            return {
+                level: 'feasible',
+                label: 'Feasible — open land',
+                note: 'Sparsely populated; ample open land for utility-scale development.'
             };
         }
     };

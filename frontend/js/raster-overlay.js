@@ -53,6 +53,10 @@ HelioScout.RasterOverlay = (function () {
      * @param {string} cfg.title,unit,source  legend text
      * @param {number[]} cfg.ticks     legend tick values (min→max)
      * @param {string} cfg.logName     console-prefix label
+     * @param {function} [cfg.alphaOf] optional (t, rawValue) → 0..1 pixel alpha.
+     *                                 Lets a layer fade to transparent (e.g. the
+     *                                 population heatmap over empty desert).
+     *                                 Defaults to fully opaque.
      */
     function create(cfg) {
         const colorOf = makeRamp(cfg.ramp);
@@ -96,9 +100,12 @@ HelioScout.RasterOverlay = (function () {
                 const lat = yToLat(yTop + (yBot - yTop) * (py / (H - 1)));
                 for (let px = 0; px < W; px++) {
                     const lon = lonMin + (lonMax - lonMin) * (px / (W - 1));
-                    const [r, g, b] = colorOf((sample(lat, lon) - cfg.min) / span);
+                    const raw = sample(lat, lon);
+                    const t = (raw - cfg.min) / span;
+                    const [r, g, b] = colorOf(t);
+                    const a = cfg.alphaOf ? Math.round(255 * Math.max(0, Math.min(1, cfg.alphaOf(t, raw)))) : 255;
                     const o = (py * W + px) * 4;
-                    img.data[o] = r; img.data[o + 1] = g; img.data[o + 2] = b; img.data[o + 3] = 255;
+                    img.data[o] = r; img.data[o + 1] = g; img.data[o + 2] = b; img.data[o + 3] = a;
                 }
             }
             ctx.putImageData(img, 0, 0);
@@ -163,7 +170,15 @@ HelioScout.RasterOverlay = (function () {
                 visible = false;
             },
             toggle(on) { on ? this.show() : this.hide(); },
-            isReady: () => !!overlay
+            isReady: () => !!overlay,
+            /**
+             * Bilinear value at a geographic point, or null until the grid has
+             * loaded. Lets other modules (e.g. feasibility checks) read the
+             * underlying field without re-fetching it.
+             */
+            sampleAt(lat, lon) { return values ? sample(lat, lon) : null; },
+            /** The loaded grid object (incl. any non-value fields like `cities`), or null. */
+            getGrid() { return grid; }
         };
     }
 
