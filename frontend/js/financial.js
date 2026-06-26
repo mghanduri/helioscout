@@ -15,6 +15,12 @@ HelioScout.Financial = (function() {
         return HelioScout.requireAssumptions().financial;
     }
 
+    // Per-user heat-rate overrides ({ turbineId: isoHeatRate }). Populated from a
+    // signed-in user's saved settings (see js/personalization.js). When present,
+    // an override replaces the register's ISO heat rate for that turbine and
+    // flows through every downstream calculation via getTurbineById().
+    let _heatRateOverrides = {};
+
     // Grid-connection & land-use assumptions (transmission cost, PV land power
     // density, population feasibility bands) — same dated/sourced register.
     function grid() {
@@ -77,7 +83,34 @@ HelioScout.Financial = (function() {
 
         getTurbineById(id) {
             const turbines = fin().turbines;
-            return turbines.find(t => t.id === id) || turbines.find(t => t.id === 'generic-ocgt');
+            const base = turbines.find(t => t.id === id) || turbines.find(t => t.id === 'generic-ocgt');
+            if (!base) return base;
+            const override = _heatRateOverrides[base.id];
+            // Return a shallow copy with the overridden ISO heat rate so the
+            // register's own object is never mutated.
+            return (override != null) ? Object.assign({}, base, { isoHeatRate: override }) : base;
+        },
+
+        /** Replace (or clear, with null) the ISO heat rate for a turbine. */
+        setHeatRateOverride(id, isoHeatRate) {
+            if (isoHeatRate == null) delete _heatRateOverrides[id];
+            else _heatRateOverrides[id] = Number(isoHeatRate);
+        },
+
+        /** Bulk-replace all overrides ({ turbineId: isoHeatRate }). */
+        setHeatRateOverrides(map) {
+            _heatRateOverrides = Object.assign({}, map || {});
+        },
+
+        /** The register's unmodified ISO heat rate for a turbine (for "reset"/labels). */
+        getDefaultHeatRate(id) {
+            const t = fin().turbines.find(t => t.id === id);
+            return t ? t.isoHeatRate : null;
+        },
+
+        /** Current override for a turbine, or null if none. */
+        getHeatRateOverride(id) {
+            return _heatRateOverrides[id] != null ? _heatRateOverrides[id] : null;
         },
 
         /**

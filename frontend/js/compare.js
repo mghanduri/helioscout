@@ -268,12 +268,24 @@ HelioScout.Compare = (function () {
 
   /* ───────── exposed interface ───────── */
 
+  /**
+   * Replace the entire pinned set (used to hydrate from a signed-in user's
+   * saved pins). Caps at MAX_PINS and ignores malformed entries.
+   */
+  function setPinnedSites(sites) {
+    pinnedSites = (Array.isArray(sites) ? sites : [])
+      .filter(function (s) { return s && (s.id || (s.lat != null && s.lon != null)); })
+      .slice(0, MAX_PINS)
+      .map(function (s) { return Object.assign({}, s, { id: s.id || _generateId(s.lat, s.lon) }); });
+  }
+
   return {
     pinnedSites: pinnedSites,  // direct reference (also accessible via getter)
     pinSite: pinSite,
     unpinSite: unpinSite,
     isPinned: isPinned,
     getPinnedSites: getPinnedSites,
+    setPinnedSites: setPinnedSites,
     clearAll: clearAll,
     generateComparisonTable: generateComparisonTable,
     rankBy: rankBy,

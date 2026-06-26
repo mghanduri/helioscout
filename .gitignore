@@ -5,3 +5,6 @@ node_modules/
 # backend/assumptions.json is committed — see assumptions.json at repo root for the source.
 # The sync-assumptions.js prestart script refreshes the copy from the root when both are
 # available (local dev / monorepo host); the committed copy serves as the Railway deploy fallback.
+
+# SQLite user-account database (runtime data, never committed)
+backend/data/

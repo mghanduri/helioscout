@@ -50,6 +50,12 @@
         <button id="mode-universal-btn" class="mode-btn" data-mode="universal">Universal</button>
       </div>
       <div class="nav-sep"></div>
+      <button id="signin-btn" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
+        </svg>
+        Sign in
+      </button>
       <div id="user-profile" class="hidden">
         <div id="user-avatar"></div>
         <div id="user-info">
@@ -143,6 +149,33 @@
           Compare (<span id="pinned-count">0</span> sites)
         </button>
         <div id="pinned-list"></div>
+      </div>
+
+      <!-- My points of interest (signed-in only) -->
+      <div id="poi-section" class="hidden">
+        <div class="layer-group-label" style="margin-top:14px">My points of interest</div>
+        <button id="poi-add-btn" type="button" class="fleet-btn">＋ Add point of interest</button>
+        <form id="poi-form" class="poi-form hidden">
+          <input type="text" id="poi-name" class="poi-input" placeholder="Name" autocomplete="off">
+          <select id="poi-type" class="poi-input">
+            <option value="solar">Solar PV</option>
+            <option value="wind">Wind</option>
+            <option value="hybrid">Hybrid</option>
+            <option value="csp">CSP</option>
+            <option value="other">Other</option>
+          </select>
+          <div class="poi-coords">
+            <input type="number" step="0.0001" id="poi-lat" class="poi-input" placeholder="Lat">
+            <input type="number" step="0.0001" id="poi-lon" class="poi-input" placeholder="Lon">
+          </div>
+          <div class="poi-form-hint">Tip: click the map first to fill coordinates.</div>
+          <div id="poi-form-error" class="poi-form-error"></div>
+          <div class="poi-form-actions">
+            <button type="submit" class="btn-primary" style="height:30px">Save</button>
+            <button type="button" id="poi-cancel" class="btn-secondary" style="height:30px">Cancel</button>
+          </div>
+        </form>
+        <div id="poi-list"></div>
       </div>
 
       <!-- Legend -->
@@ -404,6 +437,22 @@
                 <option value="generic-ocgt">Generic OCGT (older)</option>
               </select>
             </div>
+
+            <!-- Editable ISO heat rate (signed-in only) -->
+            <div class="fin-row hidden" id="fin-heatrate-row">
+              <div class="fin-row-label">
+                ISO heat rate
+                <span id="fin-heatrate-state" class="fin-row-val">register</span>
+              </div>
+              <div class="fin-heatrate-edit">
+                <input type="number" id="fin-heatrate" class="poi-input" step="10" min="6000" max="16000">
+                <span class="fin-heatrate-unit">Btu/kWh</span>
+                <button type="button" id="fin-heatrate-reset" class="btn-secondary" style="height:30px;flex:none;padding:0 10px" title="Reset to register value">Reset</button>
+              </div>
+              <div class="fin-row-label" style="margin-top:4px;color:var(--text-faint)">
+                Saved to your profile · overrides the assumptions register for this turbine.
+              </div>
+            </div>
             <div class="fin-row">
               <div class="fin-row-label">Plant age <span id="fin-age-val" class="fin-row-val">20 yrs</span></div>
               <input type="range" id="fin-age" min="0" max="40" step="1" value="20">
@@ -419,6 +468,12 @@
               </div>
             </div>
             <div class="fin-note">$/MMBtu · warm-season ambient 38 °C · heat rate derated for ambient + vintage</div>
+
+            <!-- Personal financial defaults (signed-in only) -->
+            <div id="fin-defaults-row" class="hidden">
+              <button type="button" id="fin-save-defaults" class="fleet-btn" style="margin-top:10px">Save these as my defaults</button>
+              <div id="fin-defaults-status" class="fin-note" style="margin-top:4px"></div>
+            </div>
 
             <!-- Grid connection -->
             <div id="fin-tx-section">
@@ -539,8 +594,9 @@
     <div class="loading-spinner-wrap"><div class="loading-ring"></div></div>
   </div>
 
-  <!-- ============ LOGIN SCREEN ============ -->
-  <div id="login-screen">
+  <!-- ============ LOGIN (optional sign-in for personalization) ============ -->
+  <div id="login-screen" class="hidden">
+    <button id="login-close" type="button" title="Close" aria-label="Close">×</button>
     <div id="login-card">
       <div class="login-brand">
         <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
@@ -558,10 +614,14 @@
         </div>
       </div>
 
-      <div class="login-heading">Sign in</div>
-      <div class="login-subheading">Authorized access to the siting &amp; gas-displacement assessment platform.</div>
+      <div class="login-heading" id="login-heading">Sign in</div>
+      <div class="login-subheading">Optional — the platform is fully usable without an account. Sign in to save your own points of interest, edited heat rates and other personal settings to your profile.</div>
 
       <form id="login-form" autocomplete="on" novalidate>
+        <label class="login-field hidden" id="login-name-field">
+          <span class="login-label">Full name</span>
+          <input type="text" id="login-name" placeholder="Rana Almasi" autocomplete="name">
+        </label>
         <label class="login-field">
           <span class="login-label">Work email</span>
           <input type="email" id="login-email" placeholder="name@noc.ly" autocomplete="username" required>
@@ -570,7 +630,7 @@
           <span class="login-label">Password</span>
           <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" required>
         </label>
-        <label class="login-field">
+        <label class="login-field hidden" id="login-role-field">
           <span class="login-label">Role</span>
           <select id="login-role" class="login-select">
             <option>Program Analyst · NOC</option>
@@ -581,11 +641,16 @@
           </select>
         </label>
         <div id="login-error" class="login-error" role="alert"></div>
-        <button type="submit" class="login-submit">Sign in</button>
+        <button type="submit" class="login-submit" id="login-submit">Sign in</button>
       </form>
 
+      <div class="login-toggle-row">
+        <span id="login-toggle-text">Don’t have an account?</span>
+        <button type="button" id="login-toggle" class="login-toggle">Create one</button>
+      </div>
+
       <div class="login-foot">
-        Restricted to authorized government personnel. Your session is held locally on this device.
+        Restricted to authorized government personnel. Accounts and personalization are stored on the HelioScout backend.
       </div>
     </div>
   </div>
@@ -658,6 +723,7 @@
 <script src="js/wind-overlay.js"></script>
 <script src="js/transmission.js"></script>
 <script src="js/population-overlay.js"></script>
+<script src="js/personalization.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

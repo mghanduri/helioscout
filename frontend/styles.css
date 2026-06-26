@@ -576,16 +576,20 @@ input[type=range]::-moz-range-thumb {
 .text-muted { color: var(--text-muted); }
 .empty-state { padding: 16px; font: 500 11px var(--ff-sans); color: var(--text-muted); text-align: center; }
 
-/* ──────────── LOGIN SCREEN ──────────── */
+/* ──────────── LOGIN (optional sign-in modal) ──────────── */
 #login-screen {
   position: fixed; inset: 0; z-index: 10000;
-  background:
-    radial-gradient(circle at 30% 20%, rgba(26,80,144,.10), transparent 55%),
-    var(--bg);
+  background: rgba(16,28,42,.5);
   display: flex; align-items: center; justify-content: center;
-  transition: opacity .35s ease;
+  transition: opacity .3s ease;
 }
 #login-screen.fade-out { opacity: 0; pointer-events: none; }
+#login-close {
+  position: absolute; top: 18px; right: 20px;
+  border: none; background: none; color: #cdd7e0;
+  font-size: 30px; line-height: 1; cursor: pointer; padding: 4px;
+}
+#login-close:hover { color: #fff; }
 #login-card {
   width: 360px; max-width: calc(100% - 40px);
   background: var(--bg-panel); border: 1px solid #b9c6d2; border-radius: 3px;
@@ -620,6 +624,14 @@ input[type=range]::-moz-range-thumb {
   font: 500 10px/1.5 var(--ff-sans); color: var(--text-faint);
 }
 
+/* Sign-in button in the top bar (shown when signed out) */
+#signin-btn {
+  display: flex; align-items: center; gap: 7px; height: 32px; padding: 0 13px;
+  border: 1px solid var(--border); border-radius: 2px; background: var(--bg-panel);
+  color: var(--text); font: 600 11.5px var(--ff-sans); flex: none;
+}
+#signin-btn:hover { background: var(--bg-subtle); border-color: #b9c6d2; }
+
 /* Sign-out control in the top bar */
 #signout-btn {
   border: none; background: none; color: var(--text-muted);
@@ -627,3 +639,53 @@ input[type=range]::-moz-range-thumb {
   width: 26px; height: 26px; border-radius: 2px; flex: none; margin-left: 2px;
 }
 #signout-btn:hover { background: var(--bg-subtle); color: var(--bad); }
+
+/* Login: sign-in / create-account toggle */
+.login-toggle-row {
+  margin-top: 14px; display: flex; align-items: center; gap: 6px;
+  font: 500 11.5px var(--ff-sans); color: var(--text-muted);
+}
+.login-toggle {
+  border: none; background: none; padding: 0; cursor: pointer;
+  font: 600 11.5px var(--ff-sans); color: var(--primary); text-decoration: underline;
+}
+.login-toggle:hover { color: var(--primary-light); }
+
+/* ──────────── PERSONALIZATION: points of interest ──────────── */
+#poi-section { padding: 0 16px; }
+.poi-form { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
+.poi-input {
+  width: 100%; box-sizing: border-box; height: 30px; padding: 0 9px;
+  border: 1px solid var(--border); border-radius: 2px; background: var(--bg-subtle);
+  font: 500 12px var(--ff-sans); color: var(--text);
+}
+.poi-input:focus { outline: none; border-color: var(--primary); background: var(--bg-panel); }
+.poi-coords { display: flex; gap: 6px; }
+.poi-coords .poi-input { font-family: var(--ff-mono); font-size: 11px; }
+.poi-form-hint { font: 500 9.5px/1.4 var(--ff-sans); color: var(--text-faint); }
+.poi-form-error { font: 500 10.5px var(--ff-sans); color: var(--bad); min-height: 12px; }
+.poi-form-actions { display: flex; gap: 6px; margin-top: 2px; }
+#poi-list { margin-top: 8px; display: flex; flex-direction: column; }
+.poi-empty { font: 500 10.5px var(--ff-sans); color: var(--text-faint); padding: 4px 0; }
+.poi-item {
+  display: flex; align-items: center; gap: 7px; padding: 5px 0;
+  border-bottom: 1px solid var(--border-light); font: 500 11.5px var(--ff-sans);
+}
+.poi-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.poi-item-name { flex: 1; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.poi-item-name:hover { color: var(--primary); text-decoration: underline; }
+.poi-item-del { border: none; background: none; color: var(--text-muted); font-size: 12px; cursor: pointer; }
+.poi-item-del:hover { color: var(--bad); }
+.poi-popup { font: 500 12px var(--ff-sans); min-width: 150px; }
+.poi-popup-meta { font-family: var(--ff-mono); font-size: 10px; color: var(--text-muted); margin: 3px 0; }
+.poi-popup-notes { font-size: 11px; color: var(--text-mid); margin-bottom: 6px; }
+.poi-popup-del {
+  border: 1px solid var(--border); background: var(--bg-panel); color: var(--bad);
+  border-radius: 2px; font: 600 10.5px var(--ff-sans); padding: 3px 9px; cursor: pointer;
+}
+.poi-popup-del:hover { background: var(--bg-subtle); }
+
+/* Finance: editable ISO heat rate */
+.fin-heatrate-edit { display: flex; align-items: center; gap: 7px; }
+.fin-heatrate-edit .poi-input { flex: 1; font-family: var(--ff-mono); }
+.fin-heatrate-unit { font: 500 10px var(--ff-sans); color: var(--text-muted); flex: none; }

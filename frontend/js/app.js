@@ -200,6 +200,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function runAssessment(lat, lon) {
         currentState.currentLat = lat;
         currentState.currentLon = lon;
+        // Expose the last assessed coordinate so the "Add point of interest"
+        // form (js/personalization.js) can prefill it.
+        window._hsLastClick = { lat: lat, lon: lon };
 
         // Check bounds if in Libya mode
         if (currentState.mode === 'libya') {
@@ -619,8 +622,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 refreshPinButton();
             });
         });
+
+        // Persist the pin set for a signed-in user (no-op when anonymous).
+        if (HelioScout.Personalization) HelioScout.Personalization.syncPins();
     }
     HelioScout.Compare.onUpdate = renderPinnedSidebar;
+
+    // Recompute financials when a personalization change (e.g. an edited heat
+    // rate) requests it. Guarded so it only runs with an active assessment.
+    document.addEventListener('helioscout:recalc-financials', function () {
+        if (currentState.currentAssessment && currentState.mode === 'libya') updateFinancials();
+    });
 
     pinBtn.addEventListener('click', () => {
         if (!currentState.currentAssessment) return;

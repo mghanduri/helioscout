@@ -4,6 +4,8 @@ const dotenv = require('dotenv');
 const axios = require('axios');
 const { fetchAllData } = require('./services/dataFetcher');
 const { generateAssessment } = require('./services/scoringEngine');
+const authRoutes = require('./routes/auth');
+const meRoutes = require('./routes/me');
 
 // Identify the application to Nominatim per its usage policy (a real contact /
 // app identifier is required for server-side use).
@@ -17,6 +19,10 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Account + per-user personalization (SQLite-backed)
+app.use('/api/auth', authRoutes);
+app.use('/api/me', meRoutes);
 
 // API Endpoints
 app.get('/api/assess', async (req, res) => {
