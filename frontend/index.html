@@ -50,12 +50,17 @@
         <button id="mode-universal-btn" class="mode-btn" data-mode="universal">Universal</button>
       </div>
       <div class="nav-sep"></div>
-      <div id="user-profile">
-        <div id="user-avatar">RA</div>
+      <div id="user-profile" class="hidden">
+        <div id="user-avatar"></div>
         <div id="user-info">
-          <div class="user-name">R. Almasi</div>
-          <div class="user-role">Program Analyst · NOC</div>
+          <div class="user-name" id="user-name"></div>
+          <div class="user-role" id="user-role"></div>
         </div>
+        <button id="signout-btn" type="button" title="Sign out" aria-label="Sign out">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </button>
       </div>
     </div>
   </nav>
@@ -534,6 +539,57 @@
     <div class="loading-spinner-wrap"><div class="loading-ring"></div></div>
   </div>
 
+  <!-- ============ LOGIN SCREEN ============ -->
+  <div id="login-screen">
+    <div id="login-card">
+      <div class="login-brand">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="4.6" fill="#103a63"/>
+          <g stroke="#103a63" stroke-width="1.7" stroke-linecap="round">
+            <line x1="12" y1="1.5" x2="12" y2="4.3"/><line x1="12" y1="19.7" x2="12" y2="22.5"/>
+            <line x1="1.5" y1="12" x2="4.3" y2="12"/><line x1="19.7" y1="12" x2="22.5" y2="12"/>
+            <line x1="4.6" y1="4.6" x2="6.5" y2="6.5"/><line x1="17.5" y1="17.5" x2="19.4" y2="19.4"/>
+            <line x1="19.4" y1="4.6" x2="17.5" y2="6.5"/><line x1="6.5" y1="17.5" x2="4.6" y2="19.4"/>
+          </g>
+        </svg>
+        <div>
+          <div class="login-brand-name">HelioScout</div>
+          <div class="login-brand-sub">Renewable Siting &amp; Gas-Displacement</div>
+        </div>
+      </div>
+
+      <div class="login-heading">Sign in</div>
+      <div class="login-subheading">Authorized access to the siting &amp; gas-displacement assessment platform.</div>
+
+      <form id="login-form" autocomplete="on" novalidate>
+        <label class="login-field">
+          <span class="login-label">Work email</span>
+          <input type="email" id="login-email" placeholder="name@noc.ly" autocomplete="username" required>
+        </label>
+        <label class="login-field">
+          <span class="login-label">Password</span>
+          <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" required>
+        </label>
+        <label class="login-field">
+          <span class="login-label">Role</span>
+          <select id="login-role" class="login-select">
+            <option>Program Analyst · NOC</option>
+            <option>Energy Planner · GECOL</option>
+            <option>Policy Advisor · NESDB</option>
+            <option>Engineer</option>
+            <option>Observer</option>
+          </select>
+        </label>
+        <div id="login-error" class="login-error" role="alert"></div>
+        <button type="submit" class="login-submit">Sign in</button>
+      </form>
+
+      <div class="login-foot">
+        Restricted to authorized government personnel. Your session is held locally on this device.
+      </div>
+    </div>
+  </div>
+
   <!-- ============ FLEET MODAL ============ -->
   <div id="fleet-modal" class="modal hidden">
     <div class="modal-box">
@@ -588,6 +644,7 @@
 
 <script src="js/env.js"></script>
 <script src="js/config.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/assumptions.js"></script>
 <script src="js/api.js"></script>
 <script src="js/map.js"></script>
