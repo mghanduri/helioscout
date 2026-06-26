@@ -68,23 +68,26 @@ HelioScout.Map = (function() {
         // orange/red ramp — see js/solar-overlay.js. Loaded async; ready by the
         // time the user flips the "Solar Irradiance" toggle.
         if (HelioScout.SolarOverlay) {
-            HelioScout.SolarOverlay.load(map).catch((err) =>
-                console.error('[Map] Solar overlay failed to load:', err)
-            );
+            HelioScout.SolarOverlay.load(map).then(() => {
+                const el = document.querySelector('input[value="solarHeatmap"]');
+                if (!el || el.checked) HelioScout.SolarOverlay.show();
+            }).catch((err) => console.error('[Map] Solar overlay failed to load:', err));
         }
 
         // Global-Wind-Atlas-style 100 m wind-speed overlay (same engine).
         if (HelioScout.WindOverlay) {
-            HelioScout.WindOverlay.load(map).catch((err) =>
-                console.error('[Map] Wind overlay failed to load:', err)
-            );
+            HelioScout.WindOverlay.load(map).then(() => {
+                const el = document.querySelector('input[value="windHeatmap"]');
+                if (el && el.checked) HelioScout.WindOverlay.show();
+            }).catch((err) => console.error('[Map] Wind overlay failed to load:', err));
         }
 
         // Population-density heatmap (same raster engine; fades over empty desert).
         if (HelioScout.PopulationOverlay) {
-            HelioScout.PopulationOverlay.load(map).catch((err) =>
-                console.error('[Map] Population overlay failed to load:', err)
-            );
+            HelioScout.PopulationOverlay.load(map).then(() => {
+                const el = document.querySelector('input[value="populationHeatmap"]');
+                if (el && el.checked) HelioScout.PopulationOverlay.show();
+            }).catch((err) => console.error('[Map] Population overlay failed to load:', err));
         }
 
         // Handle Map Clicks

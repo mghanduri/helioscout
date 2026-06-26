@@ -546,6 +546,32 @@ input[type=range]::-moz-range-thumb {
 .map-legend__line { width: 16px; height: 3px; border-radius: 2px; flex-shrink: 0; align-self: center; }
 .map-legend__std { font-size: 8px; color: var(--text-muted); margin-left: 2px; opacity: 0.7; }
 
+/* ──────────── RASTER OVERLAY LEGEND (GSA / GWA style) ──────────── */
+.raster-legend {
+  background: rgba(255,255,255,0.97); border: 1px solid var(--border);
+  border-radius: 3px; padding: 9px 11px; width: 190px;
+  box-shadow: 0 2px 8px rgba(20,40,70,.12);
+  font-family: var(--ff-sans); margin: 0 8px 8px 0; user-select: none;
+}
+.raster-legend__title {
+  font-size: 10px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .08em; color: var(--text-muted); margin-bottom: 6px;
+}
+.raster-legend__bar {
+  height: 10px; border-radius: 2px; border: 1px solid rgba(0,0,0,.08);
+}
+.raster-legend__ticks {
+  display: flex; justify-content: space-between; margin-top: 3px;
+  font: 500 9px/1 var(--ff-mono); color: var(--text-mid);
+}
+.raster-legend__unit {
+  margin-top: 5px; font-size: 9px; color: var(--text-mid);
+}
+.raster-legend__src {
+  margin-top: 2px; font-size: 8px; color: var(--text-muted); opacity: .8;
+}
+.raster-overlay-img { image-rendering: auto; }
+
 /* Utility */
 .text-muted { color: var(--text-muted); }
 .empty-state { padding: 16px; font: 500 11px var(--ff-sans); color: var(--text-muted); text-align: center; }
