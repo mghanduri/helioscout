@@ -125,7 +125,7 @@ function assessCSP(nasaData) {
 module.exports = {
     generateAssessment(apiData) {
         if (!apiData) return null;
-        const { lat, lon, nasa, pvgis, meteo } = apiData;
+        const { lat, lon, nasa, pvgis, meteo, live } = apiData;
 
         const solar = assessSolar(nasa, pvgis);
         const wind = assessWind(nasa, meteo);
@@ -160,7 +160,8 @@ module.exports = {
             status: {
                 nasa: nasa ? 'ok' : 'unavailable',
                 pvgis: pvgisOk ? 'ok' : 'unavailable',
-                meteo: meteo ? 'ok' : 'unavailable'
+                meteo: meteo ? 'ok' : 'unavailable',
+                live: live ? 'ok' : 'unavailable'
             },
             datasets: {
                 solar: {
@@ -173,7 +174,11 @@ module.exports = {
                     resource: wind ? { name: 'NASA POWER', dataset: 'Climatology (WS10M/WS50M, derived shear → 100 m)', source: wind.source } : null,
                     crossCheck: meta.meteo || { name: 'Open-Meteo', role: 'cross-check / elevation' }
                 },
-                csp: { resource: meta.nasa || { name: 'NASA POWER', dataset: 'Annual DNI (daily × 365)' } }
+                csp: { resource: meta.nasa || { name: 'NASA POWER', dataset: 'Annual DNI (daily × 365)' } },
+                live: {
+                    weather: meta.live || { name: 'Open-Meteo', dataset: 'Current weather + same-day shortwave' },
+                    snapshot: live || null
+                }
             },
             thresholdBasis: S._basis
         };

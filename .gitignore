@@ -8,3 +8,5 @@ node_modules/
 
 # SQLite user-account database (runtime data, never committed)
 backend/data/
+.vercel
+.env*

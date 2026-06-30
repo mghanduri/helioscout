@@ -52,6 +52,37 @@ async function fetchOpenMeteoWind(lat, lon) {
     }
 }
 
+async function fetchOpenMeteoLive(lat, lon) {
+    // Free live snapshot: current near-surface weather plus the latest
+    // available hourly shortwave radiation value for situational context.
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m&hourly=shortwave_radiation&forecast_days=1&wind_speed_unit=ms`;
+
+    try {
+        const response = await axios.get(url, { timeout: 10000 });
+        const data = response.data || {};
+        const current = data.current || {};
+        const hourly = data.hourly || {};
+
+        let shortwaveWm2 = null;
+        if (Array.isArray(hourly.shortwave_radiation) && hourly.shortwave_radiation.length) {
+            const valid = hourly.shortwave_radiation.filter(v => Number.isFinite(v));
+            if (valid.length) shortwaveWm2 = valid[valid.length - 1];
+        }
+
+        return {
+            observedAt: current.time || null,
+            temperatureC: Number.isFinite(current.temperature_2m) ? current.temperature_2m : null,
+            humidityPct: Number.isFinite(current.relative_humidity_2m) ? current.relative_humidity_2m : null,
+            wind10mMs: Number.isFinite(current.wind_speed_10m) ? current.wind_speed_10m : null,
+            windDirectionDeg: Number.isFinite(current.wind_direction_10m) ? current.wind_direction_10m : null,
+            shortwaveWm2
+        };
+    } catch (error) {
+        console.warn('Open-Meteo live snapshot fetch failed:', error.message);
+        return null;
+    }
+}
+
 function calculateMean(arr) {
     if (!arr || !arr.length) return 0;
     const valid = arr.filter(v => v !== null);
@@ -65,18 +96,20 @@ function calculateMean(arr) {
 const DATASET_META = {
     nasa: { name: 'NASA POWER', dataset: 'Climatology (multi-decade monthly normals)', endpoint: 'temporal/climatology/point' },
     pvgis: { name: 'EU PVGIS', dataset: 'PVcalc (fixed mount)', version: 'v5.3' },
-    meteo: { name: 'Open-Meteo', dataset: 'Forecast (14-day hourly wind)', role: 'cross-check / elevation' }
+    meteo: { name: 'Open-Meteo', dataset: 'Forecast (14-day hourly wind)', role: 'cross-check / elevation' },
+    live: { name: 'Open-Meteo', dataset: 'Current weather + same-day shortwave', role: 'live situational snapshot (free API)' }
 };
 
 module.exports = {
     DATASET_META,
     async fetchAllData(lat, lon) {
-        const [nasa, pvgis, meteo] = await Promise.all([
+        const [nasa, pvgis, meteo, live] = await Promise.all([
             fetchNASAPowerData(lat, lon),
             fetchPVGISData(lat, lon),
-            fetchOpenMeteoWind(lat, lon)
+            fetchOpenMeteoWind(lat, lon),
+            fetchOpenMeteoLive(lat, lon)
         ]);
 
-        return { lat, lon, nasa, pvgis, meteo, meta: DATASET_META, timestamp: Date.now() };
+        return { lat, lon, nasa, pvgis, meteo, live, meta: DATASET_META, timestamp: Date.now() };
     }
 };

@@ -218,9 +218,20 @@ document.addEventListener('DOMContentLoaded', async () => {
         els.loadingOverlay.classList.remove('hidden');
         els.contentOverlay.classList.add('hidden');
 
-        // Fetch Assessment Data from Backend
-        const assessment = await HelioScout.API.fetchAllData(lat, lon);
-        if (!assessment) return; // Aborted or failed
+        // Fetch assessment data from backend (handle failures gracefully).
+        let assessment = null;
+        try {
+            assessment = await HelioScout.API.fetchAllData(lat, lon);
+        } catch (err) {
+            console.error('Assessment request failed:', err);
+            assessment = null;
+        }
+        if (!assessment) {
+            els.loadingOverlay.classList.add('hidden');
+            if (emptyEl) emptyEl.classList.remove('hidden');
+            els.contentOverlay.classList.add('hidden');
+            return; // Aborted or failed
+        }
         
         currentState.currentAssessment = assessment;
         
@@ -253,11 +264,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         refreshPinButton();
 
         // Render Charts (default tab might be charts or we just prep them)
-        HelioScout.Charts.renderMonthlyChart('monthly-chart', assessment.solar.monthlyProfile, null);
+        HelioScout.Charts.renderMonthlyChart(
+            'monthly-chart',
+            (assessment.solar && assessment.solar.monthlyProfile) ? assessment.solar.monthlyProfile : null,
+            null
+        );
         HelioScout.Charts.renderRadarChart('radar-chart', {
-            solar: assessment.solar.score,
+            solar: assessment.solar ? assessment.solar.score : 0,
             wind: assessment.wind ? assessment.wind.score : 0,
-            csp: assessment.csp.score
+            csp: assessment.csp ? assessment.csp.score : 0
         });
     }
 
@@ -313,6 +328,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         html += `<dt>PV yield</dt><dd>${nameVer(ds.solar && ds.solar.pvYield)} ${statusLabel(p.status && p.status.pvgis)}</dd>`;
         html += `<dt>Wind</dt><dd>${nameVer(ds.wind && ds.wind.resource)} ${statusLabel(p.status && p.status.meteo)}</dd>`;
         html += `<dt>CSP (DNI)</dt><dd>${nameVer(ds.csp && ds.csp.resource)}</dd>`;
+        if (ds.live && ds.live.weather) {
+            const snap = ds.live.snapshot || {};
+            const snapParts = [];
+            if (snap.temperatureC != null) snapParts.push(`Temp ${snap.temperatureC.toFixed(1)}°C`);
+            if (snap.wind10mMs != null) snapParts.push(`Wind ${snap.wind10mMs.toFixed(1)} m/s`);
+            if (snap.shortwaveWm2 != null) snapParts.push(`SW ${Math.round(snap.shortwaveWm2)} W/m²`);
+            const snapText = snapParts.length ? ` (${snapParts.join(' · ')})` : '';
+            html += `<dt>Live weather</dt><dd>${nameVer(ds.live.weather)}${snapText} ${statusLabel(p.status && p.status.live)}</dd>`;
+        }
         html += `<dt>Assumptions register</dt><dd>v${p.assumptionsVersion || '—'} (updated ${p.assumptionsUpdated || '—'})</dd>`;
         html += `<dt>Retrieved</dt><dd>${retrieved}</dd>`;
         html += '</dl>';
@@ -333,6 +357,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function populateUI(data) {
+        const solar = data.solar || null;
+        const wind = data.wind || null;
+        const csp = data.csp || null;
+
         // Overall score display (hidden ring kept for compat)
         const scoreCircle = Math.round(327 - (327 * data.overallScore / 100));
         els.scoreRingFill.style.strokeDashoffset = scoreCircle;
@@ -362,33 +390,33 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderProvenance(data);
 
         // Solar Tab
-        els.metricGhi.textContent = data.solar.ghi.annual.toFixed(2);
-        els.metricPvOut.textContent = data.solar.pvOutput ? data.solar.pvOutput.toFixed(0) : 'N/A';
-        els.metricSolarCf.textContent = data.solar.capacityFactor.toFixed(1);
-        els.metricTilt.textContent = data.solar.optimalTilt ? Math.round(data.solar.optimalTilt) : '—';
-        els.metricTemp.textContent = data.solar.avgTemp.toFixed(1);
-        els.metricTempImpact.textContent = data.solar.tempImpact;
-        els.metricTempImpactDesc.textContent = data.solar.tempDesc;
+        els.metricGhi.textContent = solar && solar.ghi ? solar.ghi.annual.toFixed(2) : '—';
+        els.metricPvOut.textContent = (solar && solar.pvOutput != null) ? solar.pvOutput.toFixed(0) : 'N/A';
+        els.metricSolarCf.textContent = (solar && solar.capacityFactor != null) ? solar.capacityFactor.toFixed(1) : '—';
+        els.metricTilt.textContent = (solar && solar.optimalTilt != null) ? Math.round(solar.optimalTilt) : '—';
+        els.metricTemp.textContent = (solar && solar.avgTemp != null) ? solar.avgTemp.toFixed(1) : '—';
+        els.metricTempImpact.textContent = solar ? solar.tempImpact : 'Unavailable';
+        els.metricTempImpactDesc.textContent = solar ? solar.tempDesc : 'Core solar climatology unavailable for this assessment.';
         
-        els.solarScoreBar.style.width = `${data.solar.score}%`;
-        els.solarScoreValue.textContent = data.solar.score;
-        els.solarRating.textContent = data.solar.rating;
-        els.solarRating.style.color = data.solar.color;
+        els.solarScoreBar.style.width = `${solar ? solar.score : 0}%`;
+        els.solarScoreValue.textContent = solar ? solar.score : '0';
+        els.solarRating.textContent = solar ? solar.rating : 'Insufficient Data';
+        els.solarRating.style.color = solar ? solar.color : '#8595a4';
 
         // Wind Tab
-        if (data.wind) {
-            els.metricWind100.textContent = data.wind.v100.toFixed(2);
-            els.metricWpd.textContent = data.wind.wpd.toFixed(0);
-            els.metricWindClass.textContent = data.wind.windClassDesc.split('(')[0].trim();
-            els.metricWindClassDesc.textContent = data.wind.windClassDesc;
-            els.metricWindCf.textContent = data.wind.estimatedCF.toFixed(1);
-            els.metricWind50.textContent = data.wind.v50.toFixed(2);
-            els.metricWind10.textContent = data.wind.v10.toFixed(2);
+        if (wind) {
+            els.metricWind100.textContent = wind.v100.toFixed(2);
+            els.metricWpd.textContent = wind.wpd.toFixed(0);
+            els.metricWindClass.textContent = wind.windClassDesc.split('(')[0].trim();
+            els.metricWindClassDesc.textContent = wind.windClassDesc;
+            els.metricWindCf.textContent = wind.estimatedCF.toFixed(1);
+            els.metricWind50.textContent = wind.v50.toFixed(2);
+            els.metricWind10.textContent = wind.v10.toFixed(2);
             
-            els.windScoreBar.style.width = `${data.wind.score}%`;
-            els.windScoreValue.textContent = data.wind.score;
-            els.windRating.textContent = data.wind.rating;
-            els.windRating.style.color = data.wind.color;
+            els.windScoreBar.style.width = `${wind.score}%`;
+            els.windScoreValue.textContent = wind.score;
+            els.windRating.textContent = wind.rating;
+            els.windRating.style.color = wind.color;
         } else {
             // Null state
             els.metricWind100.textContent = '—';
@@ -398,14 +426,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // CSP Tab
-        els.metricDni.textContent = data.csp.dniDaily.toFixed(2);
-        els.metricDniAnnual.textContent = Math.round(data.csp.dniAnnual).toLocaleString();
-        els.metricCspSuit.textContent = data.csp.suitability;
+        els.metricDni.textContent = csp ? csp.dniDaily.toFixed(2) : '—';
+        els.metricDniAnnual.textContent = csp ? Math.round(csp.dniAnnual).toLocaleString() : '—';
+        els.metricCspSuit.textContent = csp ? csp.suitability : 'Insufficient Data';
 
-        els.cspScoreBar.style.width = `${data.csp.score}%`;
-        els.cspScoreValue.textContent = data.csp.score;
-        els.cspRating.textContent = data.csp.suitability;
-        els.cspRating.style.color = data.csp.color;
+        els.cspScoreBar.style.width = `${csp ? csp.score : 0}%`;
+        els.cspScoreValue.textContent = csp ? csp.score : '0';
+        els.cspRating.textContent = csp ? csp.suitability : 'Insufficient Data';
+        els.cspRating.style.color = csp ? csp.color : '#8595a4';
     }
 
     function updateFinancials() {

@@ -58,7 +58,14 @@ HelioScout.API = (function() {
                 const response = await fetch(`${BACKEND_URL}/api/assess?lat=${lat}&lon=${lon}`, { signal });
 
                 if (!response.ok) {
-                    throw new Error(`Backend error: ${response.status}`);
+                    let details = '';
+                    try {
+                        const errBody = await response.json();
+                        details = errBody && errBody.error ? ` (${errBody.error})` : '';
+                    } catch (e) {
+                        // Non-JSON error body; keep status-only fallback.
+                    }
+                    throw new Error(`Backend error: ${response.status}${details}`);
                 }
 
                 const assessment = await response.json();
@@ -85,7 +92,7 @@ HelioScout.API = (function() {
                 updateLoadingSource('meteo', 'error');
                 console.error('Failed to fetch from backend:', error);
                 alert('Could not fetch assessment data from the backend. Make sure the Railway server is running.');
-                throw error;
+                return null;
             }
         },
 

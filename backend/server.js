@@ -16,6 +16,18 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+function parseCoordinate(value, kind) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return { ok: false, error: `${kind} must be a finite number.` };
+    if (kind === 'Latitude' && (n < -90 || n > 90)) {
+        return { ok: false, error: 'Latitude must be between -90 and 90.' };
+    }
+    if (kind === 'Longitude' && (n < -180 || n > 180)) {
+        return { ok: false, error: 'Longitude must be between -180 and 180.' };
+    }
+    return { ok: true, value: n };
+}
+
 // Middleware
 app.use(cors());
 app.use(express.json());
@@ -29,18 +41,28 @@ app.get('/api/assess', async (req, res) => {
     try {
         const { lat, lon } = req.query;
         
-        if (!lat || !lon) {
+        if (lat == null || lon == null) {
             return res.status(400).json({ error: 'Latitude and longitude are required.' });
         }
 
-        const latitude = parseFloat(lat);
-        const longitude = parseFloat(lon);
+        const parsedLat = parseCoordinate(lat, 'Latitude');
+        if (!parsedLat.ok) return res.status(400).json({ error: parsedLat.error });
+        const parsedLon = parseCoordinate(lon, 'Longitude');
+        if (!parsedLon.ok) return res.status(400).json({ error: parsedLon.error });
+        const latitude = parsedLat.value;
+        const longitude = parsedLon.value;
 
         // 1. Fetch data from external APIs (NASA, PVGIS, Open-Meteo)
         const apiData = await fetchAllData(latitude, longitude);
 
         if (!apiData) {
             return res.status(500).json({ error: 'Failed to fetch data from external APIs.' });
+        }
+        if (!apiData.nasa) {
+            // Core annual resource climatology is required for the assessment.
+            return res.status(503).json({
+                error: 'Core climatology data is temporarily unavailable. Please retry shortly.'
+            });
         }
 
         // 2. Run the assessment engine
@@ -58,11 +80,15 @@ app.get('/api/assess', async (req, res) => {
 // browser-direct call that violated Nominatim's usage policy at any real volume.
 app.get('/api/geocode/reverse', async (req, res) => {
     const { lat, lon } = req.query;
-    if (!lat || !lon) {
+    if (lat == null || lon == null) {
         return res.status(400).json({ error: 'Latitude and longitude are required.' });
     }
+    const parsedLat = parseCoordinate(lat, 'Latitude');
+    if (!parsedLat.ok) return res.status(400).json({ error: parsedLat.error });
+    const parsedLon = parseCoordinate(lon, 'Longitude');
+    if (!parsedLon.ok) return res.status(400).json({ error: parsedLon.error });
     try {
-        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(lat)}&lon=${encodeURIComponent(lon)}&zoom=10`;
+        const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${encodeURIComponent(parsedLat.value)}&lon=${encodeURIComponent(parsedLon.value)}&zoom=10`;
         const r = await axios.get(url, { timeout: 8000, headers: { 'User-Agent': NOMINATIM_UA } });
         const d = r.data || {};
         const a = d.address || {};

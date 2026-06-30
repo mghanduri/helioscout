@@ -38,6 +38,14 @@ HelioScout.Compare = (function () {
     return 'Poor — Not Recommended';
   }
 
+  function _fmtCoord(value, isLat) {
+    if (value === null || value === undefined || value === '') return '—';
+    var n = Number(value);
+    if (!Number.isFinite(n)) return '—';
+    var hemi = isLat ? (n >= 0 ? 'N' : 'S') : (n >= 0 ? 'E' : 'W');
+    return Math.abs(n).toFixed(4) + '°' + hemi;
+  }
+
   /* ───────── public API ───────── */
 
   /**
@@ -113,7 +121,7 @@ HelioScout.Compare = (function () {
       rows.push(
         '<th class="compare-table__site">' +
           '<span class="compare-table__site-name">' + (s.name || s.id) + '</span>' +
-          '<span class="compare-table__coords">' + _fmt(s.lat, 4) + '°N, ' + _fmt(s.lon, 4) + '°E</span>' +
+          '<span class="compare-table__coords">' + _fmtCoord(s.lat, true) + ', ' + _fmtCoord(s.lon, false) + '</span>' +
           '<button class="compare-table__unpin" data-site-id="' + s.id + '" title="Remove">✕</button>' +
         '</th>'
       );

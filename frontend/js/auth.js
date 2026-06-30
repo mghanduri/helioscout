@@ -58,7 +58,14 @@
             body: options.body != null ? JSON.stringify(options.body) : undefined
         }).then(function (res) {
             return res.text().then(function (text) {
-                var data = text ? JSON.parse(text) : {};
+                var data = {};
+                if (text) {
+                    try {
+                        data = JSON.parse(text);
+                    } catch (parseErr) {
+                        data = { error: text };
+                    }
+                }
                 if (!res.ok) {
                     var err = new Error(data.error || ('Request failed (' + res.status + ')'));
                     err.status = res.status;
