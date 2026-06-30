@@ -619,7 +619,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const a = currentState.currentAssessment;
         const pinned = HelioScout.Compare.isPinned(a.lat, a.lon);
         pinBtn.classList.toggle('is-pinned', pinned);
-        pinBtn.title = pinned ? 'Unpin this site' : 'Pin this site for comparison';
+        pinBtn.title = pinned ? 'Remove from shortlist' : 'Add this site to the shortlist';
     }
 
     function renderPinnedSidebar() {
@@ -627,7 +627,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         pinnedCount.textContent = sites.length;
 
         if (sites.length === 0) {
-            pinnedList.innerHTML = '<div class="empty-state"><p>Click on the map to assess a location, then pin it for comparison.</p></div>';
+            pinnedList.innerHTML = '<div class="empty-state"><p>Click on the map to assess a location, then add it to the shortlist.</p></div>';
             compareBtn.classList.add('hidden');
             return;
         }
@@ -719,7 +719,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (rec.financial) {
             rows.push(['LCOE Solar ($/MWh)', rec.financial.lcoeSolar.toFixed(2)]);
             rows.push(['Gas Freed (MMBtu/yr)', Math.round(rec.financial.gasDisplacement)]);
-            rows.push(['Gas Value Export ($M/yr)', rec.financial.gasValue.toFixed(2)]);
+            rows.push(['Export Gas Value ($M/yr)', rec.financial.gasValue.toFixed(2)]);
             if (rec.financial.gridDistanceKm != null)
                 rows.push(['Distance to Grid (km)', rec.financial.gridDistanceKm.toFixed(1)]);
             if (rec.financial.lcoeDelivered != null)

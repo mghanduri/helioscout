@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="HelioScout — Federal Analytical. Renewable siting and gas-displacement assessment for government-grade deployment.">
+  <meta name="description" content="HelioScout — Federal Analytical. Libya-specific gas-displacement decision system for renewable siting, fleet validation, and export-value analysis.">
   <title>HelioScout — Federal Analytical</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,7 +33,7 @@
       </svg>
       <span class="logo-wordmark">HelioScout</span>
       <div class="nav-sep"></div>
-      <span class="logo-subtitle">Renewable Siting<br>&amp; Gas-Displacement</span>
+      <span class="logo-subtitle">Gas-Displacement<br>Decision System</span>
     </div>
 
     <div id="nav-center">
@@ -73,7 +73,7 @@
 
   <!-- DATA SOURCE STRIP -->
   <div id="source-strip">
-    <span>SOURCE: NASA POWER v9 climatology · EU PVGIS · GECOL fleet register · IEC 61215 / 61400 methodology</span>
+    <span>SOURCE: NASA POWER v9 climatology · EU PVGIS · GECOL fleet register · export-parity valuation · assumptions register</span>
     <span id="source-strip-time">UTC — · CRS EPSG:4326 · LAST SYNC —</span>
   </div>
 
@@ -146,7 +146,7 @@
       <!-- Pinned sites -->
       <div id="pinned-section">
         <button id="compare-btn" class="fleet-btn hidden">
-          Compare (<span id="pinned-count">0</span> sites)
+          Compare shortlist (<span id="pinned-count">0</span>)
         </button>
         <div id="pinned-list"></div>
       </div>
@@ -230,7 +230,7 @@
           </g>
         </svg>
         <div class="empty-title">No site selected</div>
-        <div class="empty-hint">Click anywhere on the map to run an assessment, or select a site from the table below.</div>
+        <div class="empty-hint">Click the map to run a Libya assessment and see export gas value, grid cost, and suitability in one view.</div>
       </div>
 
       <!-- Content (shown after assessment) -->
@@ -239,7 +239,7 @@
         <!-- Assessment header -->
         <div id="assessment-header">
           <div class="assess-header-top">
-            <div class="assess-section-label">Site Assessment</div>
+            <div class="assess-section-label">Decision Register</div>
             <div id="site-id-badge" class="assess-site-id"></div>
           </div>
           <div class="assess-title-row">
@@ -259,7 +259,7 @@
               <span id="rec-text" class="score-rating"></span>
             </div>
             <div class="score-track"><div id="score-bar-fill" class="score-bar"></div></div>
-            <div class="score-desc">Composite of resource, terrain, grid &amp; land constraints</div>
+            <div class="score-desc">Composite of resource, terrain, export-gas value, grid &amp; land constraints</div>
           </div>
         </div>
         <!-- Hidden SVG kept for app.js strokeDashoffset compat -->
@@ -271,7 +271,7 @@
           <button class="tab-btn" data-tab="wind">Wind</button>
           <button class="tab-btn" data-tab="csp">CSP</button>
           <button class="tab-btn" data-tab="charts">Charts</button>
-          <button class="tab-btn" data-tab="financial" id="financial-tab-btn">Finance</button>
+          <button class="tab-btn" data-tab="financial" id="financial-tab-btn">Export value</button>
         </div>
 
         <!-- TAB: Solar -->
@@ -388,7 +388,7 @@
             <div class="score-row-label" style="margin-top:18px;margin-bottom:8px">Resource scores</div>
             <div style="height:140px"><canvas id="radar-chart"></canvas></div>
 
-            <div class="score-row-label" style="margin-top:16px;margin-bottom:8px">Data sources &amp; assumptions</div>
+            <div class="score-row-label" style="margin-top:16px;margin-bottom:8px">Data sources, assumptions &amp; validation</div>
             <div id="provenance-body"></div>
           </div>
         </div>
@@ -397,7 +397,7 @@
         <div id="tab-financial" class="tab-content">
           <div class="tab-inner">
             <div class="fin-title">Gas-displacement analysis</div>
-            <div class="fin-subtitle">Value of natural gas freed for export by displacing thermal generation. Displaced turbine auto-inferred from nearest GECOL plant.</div>
+            <div class="fin-subtitle">Policy-grade export value of natural gas freed by displacing thermal generation. Displaced turbine auto-inferred from nearest GECOL plant.</div>
           </div>
 
           <!-- Export value headline -->
@@ -535,9 +535,9 @@
         <div id="assessment-actions">
           <button id="pin-site-btn" class="btn-primary">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 21s-7-5.5-7-11a7 7 0 0114 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.4"/></svg>
-            Pin site
+            Shortlist site
           </button>
-          <button id="export-btn" class="btn-secondary">Export brief</button>
+          <button id="export-btn" class="btn-secondary">Export decision brief</button>
         </div>
 
         <!-- Hidden close button kept for app.js compat -->
@@ -550,7 +550,7 @@
   <div id="proposals-panel">
     <div id="proposals-header">
       <div class="proposals-title-row">
-        <span class="proposals-title">Proposed sites</span>
+        <span class="proposals-title">Shortlist candidates</span>
         <span id="proposals-badge"><span id="proposals-count">0</span></span>
       </div>
       <div id="proposals-filters">
@@ -560,7 +560,7 @@
         <span class="filter-tab" data-filter="hybrid">Hybrid</span>
         <span class="filter-tab" data-filter="csp">CSP</span>
       </div>
-      <div class="proposals-sort-hint">sorted by suitability ↓</div>
+      <div class="proposals-sort-hint">sorted by suitability + export value ↓</div>
     </div>
     <div id="proposals-table-wrap">
       <div id="proposals-thead">
@@ -571,7 +571,7 @@
         <div style="text-align:right">Cap. factor</div>
         <div style="text-align:right">LCOE</div>
         <div style="text-align:right">Suitability</div>
-        <div style="text-align:right">Action</div>
+        <div style="text-align:right">Decision</div>
       </div>
       <div id="proposals-list"></div>
     </div>
@@ -610,7 +610,7 @@
         </svg>
         <div>
           <div class="login-brand-name">HelioScout</div>
-          <div class="login-brand-sub">Renewable Siting &amp; Gas-Displacement</div>
+          <div class="login-brand-sub">Gas-Displacement Decision System</div>
         </div>
       </div>
 
@@ -659,7 +659,7 @@
   <div id="fleet-modal" class="modal hidden">
     <div class="modal-box">
       <div class="modal-header">
-        <span class="modal-title">Fleet Gas Reconciliation</span>
+        <span class="modal-title">Fleet Validation</span>
         <button id="fleet-modal-close" class="modal-close">×</button>
       </div>
       <div class="modal-body">
@@ -692,7 +692,7 @@
   <div id="comparison-modal" class="modal hidden">
     <div class="modal-box" style="max-width:900px">
       <div class="modal-header">
-        <span class="modal-title">Site Comparison</span>
+        <span class="modal-title">Shortlist Comparison</span>
         <button id="modal-close" class="modal-close">×</button>
       </div>
       <div class="modal-body">

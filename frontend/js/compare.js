@@ -108,8 +108,8 @@ HelioScout.Compare = (function () {
   function generateComparisonTable() {
     if (pinnedSites.length === 0) {
       return '<div class="compare-empty">' +
-        '<p>No sites pinned for comparison.</p>' +
-        '<p class="compare-empty__hint">Click the 📌 pin icon on any site assessment to add it here (max ' + MAX_PINS + ').</p>' +
+        '<p>No sites are on the shortlist yet.</p>' +
+        '<p class="compare-empty__hint">Click the shortlist button on any site assessment to add it here (max ' + MAX_PINS + ').</p>' +
         '</div>';
     }
 
@@ -230,7 +230,7 @@ HelioScout.Compare = (function () {
       'DNI (kWh/m²/yr)', 'CSP Score',
       'Composite Score', 'Recommendation',
       'LCOE Solar ($/MWh)',
-      'Gas Freed (MMBtu/yr)', 'Gas Value Export ($M/yr)'
+      'Gas Freed (MMBtu/yr)', 'Export Gas Value ($M/yr)'
     ];
 
     var csvRows = [headers.join(',')];

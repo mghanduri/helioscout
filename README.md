@@ -1,9 +1,9 @@
 # HelioScout
 
-A renewable-energy siting and financial-assessment tool for Libya. Click anywhere on the
-map to assess solar, wind, and CSP resource from live datasets, then quantify the **natural
-gas freed for export** by displacing thermal generation with renewables — valued at both
-subsidised-domestic and export-parity prices.
+A Libya-specific **gas-displacement decision system** for siting renewable generation.
+Click anywhere on the map to assess solar, wind, and CSP resource from live datasets, then
+quantify the **natural gas freed for export** by displacing thermal generation with renewables
+— valued at both subsidised-domestic and export-parity prices.
 
 Built for the Libyan NOC context: the pitch isn't "clean energy," it's *liberated export
 volume*. Every MMBtu of gas not burned for domestic power is gas sold abroad.
